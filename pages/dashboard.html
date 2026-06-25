@@ -5,219 +5,418 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>STEMQuest - Home Dashboard</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css">
   <link rel="stylesheet" href="../css/components.css">
   <link rel="stylesheet" href="../css/animations.css">
   <link rel="stylesheet" href="../css/pages.css">
   <style>
-    .welcome-banner {
-      background: linear-gradient(135deg, var(--primary-purple), var(--primary-purple-hover));
+    /* ===== HERO WELCOME CARD ===== */
+    .hero-welcome {
+      background: linear-gradient(135deg, #4C1D95 0%, #6B21A8 50%, #BE185D 100%);
+      border-radius: 24px;
+      padding: 32px;
       color: white;
-      border-radius: var(--border-radius-lg);
-      padding: 30px;
       margin-bottom: 24px;
       position: relative;
       overflow: hidden;
-      box-shadow: 0 10px 25px rgba(107, 33, 168, 0.2);
+      box-shadow: 0 12px 40px rgba(107,33,168,0.35);
     }
-    .welcome-banner::after {
-      content: '\f19c';
-      font-family: 'Font Awesome 6 Free';
-      font-weight: 900;
+    .hero-welcome::after {
+      content: '';
       position: absolute;
-      right: 20px;
-      bottom: -20px;
-      font-size: 140px;
-      opacity: 0.1;
-      transform: rotate(-15deg);
+      inset: 0;
+      background-image: radial-gradient(rgba(255,255,255,0.05) 1.5px, transparent 1.5px);
+      background-size: 18px 18px;
+      pointer-events: none;
     }
-    .progress-bar-container {
-      width: 100%;
-      height: 12px;
-      background: rgba(255,255,255,0.2);
-      border-radius: 10px;
-      overflow: hidden;
-      margin: 15px 0 5px 0;
+    .hero-welcome-inner { position: relative; z-index: 1; }
+    .greeting-text { font-size: 14px; font-weight: 600; opacity: 0.8; margin-bottom: 4px; }
+    .name-text { font-family: var(--font-display); font-size: 32px; font-weight: 800; margin-bottom: 8px; }
+    .rank-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 20px;
     }
-    .progress-bar-fill {
-      height: 100%;
-      background: var(--quest-pink);
-      width: 0%;
-      transition: width 0.8s ease-in-out;
+
+    /* XP Progress Bar inline */
+    .xp-progress-wrap { margin-top: 10px; }
+    .xp-bar-label { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; opacity: 0.85; margin-bottom: 6px; }
+    .xp-bar-track { width: 100%; height: 10px; background: rgba(255,255,255,0.15); border-radius: 10px; overflow: hidden; }
+    .xp-bar-fill { height: 100%; background: linear-gradient(90deg, #F9A8D4, #FBCFE8); border-radius: 10px; width: 0%; transition: width 1.2s cubic-bezier(0.165, 0.84, 0.44, 1); }
+
+    /* Hero mascot big icon */
+    .hero-mascot {
+      position: absolute;
+      right: 30px;
+      bottom: 10px;
+      font-size: 90px;
+      opacity: 0.15;
+      z-index: 0;
+      pointer-events: none;
     }
-    .dashboard-badge-grid {
+
+    /* ===== STATS STRIP ===== */
+    .stats-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    @media(max-width:768px) { .stats-strip { grid-template-columns: repeat(2, 1fr); } }
+    @media(max-width:400px) { .stats-strip { grid-template-columns: 1fr; } }
+
+    .stat-tile {
+      background: white;
+      border: 1px solid var(--muted-gray);
+      border-radius: 18px;
+      padding: 20px;
       display: flex;
-      gap: 12px;
-      overflow-x: auto;
-      padding: 10px 0;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+      transition: transform 0.2s ease;
     }
-    .dashboard-badge-item {
-      flex: 0 0 70px;
-      height: 70px;
-      border-radius: 50%;
-      background: var(--neutral-light);
+    .stat-tile:hover { transform: translateY(-3px); }
+    .stat-tile-icon {
+      width: 46px; height: 46px;
+      border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 24px;
-      color: #9CA3AF;
-      border: 2px solid var(--muted-gray);
+      font-size: 20px;
+      flex-shrink: 0;
     }
-    .dashboard-badge-item.unlocked {
-      background: rgba(219,39,119,0.1);
-      color: var(--quest-pink);
-      border-color: var(--quest-pink);
+    .stat-tile-val { font-family: var(--font-display); font-size: 22px; font-weight: 800; color: var(--neutral-dark); }
+    .stat-tile-label { font-size: 12px; color: #6B7280; font-weight: 500; margin-top: 2px; }
+
+    /* ===== ACTIVE QUEST CARD ===== */
+    .quest-launcher {
+      background: white;
+      border: 1px solid var(--muted-gray);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .quest-progress-mini { height: 6px; background: var(--muted-gray); border-radius: 4px; overflow: hidden; margin-top: 4px; }
+    .quest-progress-mini-fill { height: 100%; background: linear-gradient(90deg, #7C3AED, #DB2777); border-radius: 4px; }
+
+    /* ===== SUBJECT WORLD TILES ===== */
+    .worlds-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 16px;
+    }
+    .world-tile {
+      border-radius: 18px;
+      padding: 22px 16px;
+      text-align: center;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      position: relative;
+      overflow: hidden;
+    }
+    .world-tile:hover { transform: translateY(-5px) scale(1.02); box-shadow: 0 12px 28px rgba(0,0,0,0.12); }
+    .world-tile.locked { opacity: 0.55; cursor: not-allowed; }
+    .world-tile i { font-size: 30px; margin-bottom: 12px; }
+    .world-tile h4 { font-family: var(--font-display); font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+    .world-tile p { font-size: 11px; opacity: 0.7; }
+    .world-tile .lock-overlay { position: absolute; top: 10px; right: 10px; font-size: 13px; }
+
+    /* ===== STREAK & CHALLENGE CARDS ===== */
+    .streak-card {
+      background: linear-gradient(135deg, #1C0A3B, #4C1D95);
+      border-radius: 20px;
+      padding: 24px;
+      color: white;
+      box-shadow: 0 8px 20px rgba(107,33,168,0.2);
+    }
+    .streak-flame {
+      font-size: 48px;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .challenge-card {
+      background: linear-gradient(135deg, #7F1D1D, #BE185D);
+      border-radius: 20px;
+      padding: 24px;
+      color: white;
+      box-shadow: 0 8px 20px rgba(219,39,119,0.2);
     }
   </style>
 </head>
 <body>
+<div class="app-container">
+  <main class="main-content">
 
-  <div class="app-container">
-    <main class="main-content">
-      <!-- Welcome Banner -->
-      <div class="welcome-banner anim-slide-up" id="welcome-card">
-        <h2 style="color: white; font-size: 30px;" id="welcome-user-text">Namaste, Learner!</h2>
-        <p style="font-size: 15px; opacity: 0.9;" id="rank-title-text">Rank: Curious Cub</p>
-        
-        <div class="progress-bar-container">
-          <div class="progress-bar-fill" id="level-progress-fill"></div>
-        </div>
-        <div class="flex-row-between" style="font-size: 12px; font-weight: 600;">
-          <span id="level-current">Level 1</span>
-          <span id="xp-current">0 / 500 XP</span>
-          <span id="level-next">Level 2</span>
+    <!-- HERO WELCOME BANNER -->
+    <div class="hero-welcome anim-slide-up">
+      <div class="hero-welcome-inner">
+        <div class="greeting-text" id="greeting-text">Good Morning 👋</div>
+        <div class="name-text" id="welcome-name">Priya Rao</div>
+        <div class="rank-badge"><i class="fas fa-medal"></i> <span id="rank-badge-text">STEM Explorer</span></div>
+        <div class="xp-progress-wrap">
+          <div class="xp-bar-label">
+            <span id="level-label">Level 8</span>
+            <span id="xp-label">2,150 / 6,400 XP to Level 9</span>
+          </div>
+          <div class="xp-bar-track"><div class="xp-bar-fill" id="xp-bar-fill"></div></div>
         </div>
       </div>
+      <div class="hero-mascot"><i class="fas fa-graduation-cap"></i></div>
+    </div>
 
-      <!-- Quick Portals Layout -->
-      <div class="grid-3 anim-slide-up">
-        <!-- Active Quest card -->
-        <div class="quest-card" style="grid-column: span 2;">
-          <div class="quest-card-badge" style="background: var(--lavender-fill); color: var(--primary-purple);">Active Quest</div>
-          <h3 style="font-size: 22px; color: var(--neutral-dark);">Resume Last Mission</h3>
-          <p style="font-size: 14px; color: #4B5563; max-width: 450px;" id="active-quest-desc">You are learning the basics of electrical loops inside the village generator grid.</p>
-          
-          <div class="flex-row-between" style="margin-top: 15px;">
-            <div style="display:flex; gap:16px;">
-              <span style="font-size:13px; font-weight:700;"><i class="fas fa-star" style="color:var(--quest-pink)"></i> 50 XP Reward</span>
-              <span style="font-size:13px; font-weight:700;"><i class="fas fa-coins" style="color:var(--warning-amber)"></i> 10 Coins</span>
-            </div>
-            <button class="btn btn-primary btn-sm" onclick="resumeQuest()">Resume <i class="fas fa-play"></i></button>
+    <!-- STATS STRIP -->
+    <div class="stats-strip anim-slide-up">
+      <div class="stat-tile">
+        <div class="stat-tile-icon" style="background:rgba(217,119,6,0.1); color:var(--warning-amber);">
+          <i class="fas fa-fire"></i>
+        </div>
+        <div>
+          <div class="stat-tile-val" id="stats-streak">0</div>
+          <div class="stat-tile-label">Day Streak 🔥</div>
+        </div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-tile-icon" style="background:rgba(219,39,119,0.1); color:var(--quest-pink);">
+          <i class="fas fa-star"></i>
+        </div>
+        <div>
+          <div class="stat-tile-val" id="stats-xp">0</div>
+          <div class="stat-tile-label">Total XP</div>
+        </div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-tile-icon" style="background:rgba(217,119,6,0.1); color:#F59E0B;">
+          <i class="fas fa-coins"></i>
+        </div>
+        <div>
+          <div class="stat-tile-val" id="stats-coins">0</div>
+          <div class="stat-tile-label">STEM Coins</div>
+        </div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-tile-icon" style="background:rgba(5,150,105,0.1); color:var(--success-green);">
+          <i class="fas fa-check-circle"></i>
+        </div>
+        <div>
+          <div class="stat-tile-val" id="stats-quests">0</div>
+          <div class="stat-tile-label">Quests Done</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIVE QUEST + STREAK/CHALLENGE GRID -->
+    <div class="grid-2 anim-slide-up" style="margin-bottom:24px;">
+      <!-- Active Quest Launcher -->
+      <div class="quest-launcher">
+        <div class="flex-row-between">
+          <div>
+            <span style="font-size:11px; text-transform:uppercase; font-weight:700; color:var(--quest-pink); letter-spacing:1px;">Active Mission</span>
+            <h3 style="font-family:var(--font-display); font-size:20px; color:var(--neutral-dark); margin-top:4px;" id="quest-title">Light Up the Darkness</h3>
+          </div>
+          <div style="background:var(--lavender-fill); color:var(--primary-purple); padding:6px 12px; border-radius:20px; font-size:13px; font-weight:700; white-space:nowrap;">
+            +50 XP
           </div>
         </div>
 
-        <!-- Daily Challenge widget -->
-        <div class="quest-card" style="background: radial-gradient(circle at bottom right, rgba(219,39,119,0.05) 0%, white 100%);">
-          <div class="quest-card-badge" style="background: rgba(217,119,6,0.1); color: var(--warning-amber);" id="challenge-status-badge">Pending</div>
-          <h3 style="font-size: 20px;"><i class="fas fa-calendar-day" style="color:var(--quest-pink); margin-right: 6px;"></i> Daily Challenge</h3>
-          <p style="font-size: 13px; color: #4B5563; margin-top: 5px;">Complete a 5-minute puzzle to keep your daily streak alive!</p>
-          <a href="daily-challenges.html" class="btn btn-accent btn-sm" style="margin-top: 15px; width: fit-content;" onclick="STEMQuestUI.playAudio('click')">Play Puzzle</a>
+        <p style="font-size:14px; color:#4B5563;">Restore light to the village by completing closed electrical loops using batteries, wires and switches.</p>
+
+        <div>
+          <div class="flex-row-between" style="font-size:12px; font-weight:700; margin-bottom:5px;">
+            <span>Quest Progress</span><span style="color:var(--primary-purple);">Step 1 of 4</span>
+          </div>
+          <div class="quest-progress-mini">
+            <div class="quest-progress-mini-fill" style="width:25%;"></div>
+          </div>
+        </div>
+
+        <div class="flex-row-between">
+          <div style="display:flex; gap:12px; font-size:13px; font-weight:700; color:#6B7280;">
+            <span><i class="fas fa-flask" style="color:var(--primary-purple); margin-right:4px;"></i>Physics</span>
+            <span><i class="fas fa-clock" style="color:var(--warning-amber); margin-right:4px;"></i>~8 min</span>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="STEMQuestUI.playAudio('click'); window.location.href='quest.html?id=phys_q1'">
+            Resume <i class="fas fa-play"></i>
+          </button>
         </div>
       </div>
 
-      <!-- More Options Grid -->
-      <div class="grid-2 anim-slide-up" style="margin-top: 24px;">
-        <!-- Virtual Labs Preview -->
-        <div class="glass-card">
-          <h3 style="font-size: 20px; color: var(--neutral-dark); margin-bottom: 12px;"><i class="fas fa-flask" style="color:var(--primary-purple); margin-right: 8px;"></i> Virtual STEM Lab</h3>
-          <p style="font-size: 14px; color: #4B5563; margin-bottom: 16px;">Drag-and-drop components, mix indicators, and perform experiment tasks in Physics, Chemistry, and Math safely.</p>
-          <a href="virtual-lab.html" class="btn btn-outline btn-sm" onclick="STEMQuestUI.playAudio('click')">Launch Workbench</a>
-        </div>
-
-        <!-- Battle Arena Match launcher -->
-        <div class="glass-card">
-          <h3 style="font-size: 20px; color: var(--neutral-dark); margin-bottom: 12px;"><i class="fas fa-trophy" style="color:var(--quest-pink); margin-right: 8px;"></i> Battle Arena</h3>
-          <p style="font-size: 14px; color: #4B5563; margin-bottom: 16px;">Duel online classmates in anonymous speed question tournaments. Win trophy titles and earn large XP boosters.</p>
-          <a href="battle-arena.html" class="btn btn-outline btn-sm" onclick="STEMQuestUI.playAudio('click')">Find Opponent</a>
-        </div>
-      </div>
-
-      <!-- Badges cabinet preview -->
-      <div class="glass-card anim-slide-up" style="margin-top: 24px;">
-        <div class="flex-row-between" style="margin-bottom: 15px;">
-          <h3 style="font-size: 20px; color: var(--neutral-dark);"><i class="fas fa-award" style="color:var(--warning-amber); margin-right: 8px;"></i> Badges Cabinet</h3>
-          <a href="badge-collection.html" style="color: var(--primary-purple); font-weight: 700; font-size: 14px;" onclick="STEMQuestUI.playAudio('click')">View All</a>
-        </div>
-        <div class="dashboard-badge-grid" id="dashboard-badges-container">
-          <!-- Filled by JS -->
-        </div>
-      </div>
-    </main>
-  </div>
-
-  <script src="../js/state.js"></script>
-  <script src="../js/db.js"></script>
-  <script src="../js/ui.js"></script>
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      // Load UI Shell
-      STEMQuestUI.initCommonUI('map');
-      
-      // Load and apply state parameters
-      updateDashboardData();
-
-      // Listen to profile updates
-      window.addEventListener("stemquest_state_changed", () => {
-        updateDashboardData();
-      });
-    });
-
-    function updateDashboardData() {
-      const state = window.STEMQuestState.get();
-      if (!state.user.name) {
-        // Safe redirect if not signed up
-        window.location.href = "login.html";
-        return;
-      }
-
-      // 1. Text overrides
-      document.getElementById("welcome-user-text").innerText = `Namaste, ${state.user.name}!`;
-      document.getElementById("rank-title-text").innerText = `Rank: ${state.rank}`;
-      
-      // 2. Level calculation
-      const lvl = state.level;
-      const currentLevelXP = Math.pow(lvl - 1, 2) * 100;
-      const nextLevelXP = Math.pow(lvl, 2) * 100;
-      const progressXP = state.xp - currentLevelXP;
-      const requiredXP = nextLevelXP - currentLevelXP;
-      const percent = Math.min(100, Math.max(0, (progressXP / requiredXP) * 100));
-
-      document.getElementById("level-progress-fill").style.width = percent + "%";
-      document.getElementById("level-current").innerText = `Level ${lvl}`;
-      document.getElementById("level-next").innerText = `Level ${lvl + 1}`;
-      document.getElementById("xp-current").innerText = `${state.xp} / ${nextLevelXP} XP`;
-
-      // 3. Daily challenge status badge
-      const today = new Date().toDateString();
-      const chalBadge = document.getElementById("challenge-status-badge");
-      if (state.dailyChallengeDate === today && state.dailyChallengeCompleted) {
-        chalBadge.innerText = "Completed";
-        chalBadge.style.background = "rgba(5, 150, 105, 0.1)";
-        chalBadge.style.color = "var(--success-green)";
-      } else {
-        chalBadge.innerText = "Pending";
-        chalBadge.style.background = "rgba(217,119,6,0.1)";
-        chalBadge.style.color = "var(--warning-amber)";
-      }
-
-      // 4. Fill badge cabinet preview
-      const badgesContainer = document.getElementById("dashboard-badges-container");
-      if (badgesContainer && window.STEMQuestDB) {
-        badgesContainer.innerHTML = window.STEMQuestDB.badges.map(badge => {
-          const isUnlocked = state.badgeCollection.includes(badge.id);
-          return `
-            <div class="dashboard-badge-item ${isUnlocked ? 'unlocked' : ''}" title="${badge.name}: ${badge.desc}">
-              <i class="fas ${badge.icon}"></i>
+      <!-- Streak & Challenge column -->
+      <div class="flex-column" style="gap:16px;">
+        <div class="streak-card">
+          <div class="flex-row-between" style="margin-bottom:10px;">
+            <h4 style="color:white; font-family:var(--font-display); font-size:18px;"><i class="fas fa-fire"></i> Daily Streak</h4>
+            <span id="streak-badge" style="background:rgba(255,255,255,0.15); padding:3px 10px; border-radius:12px; font-size:12px; font-weight:700;">Active</span>
+          </div>
+          <div class="flex-row-between" style="align-items:flex-end;">
+            <div>
+              <div style="font-family:var(--font-display); font-size:40px; font-weight:800;" id="streak-num">0</div>
+              <div style="font-size:13px; opacity:0.75;">Days in a row! Keep going.</div>
             </div>
-          `;
-        }).join("");
-      }
+            <div class="streak-flame">🔥</div>
+          </div>
+        </div>
+        <div class="challenge-card" id="challenge-section">
+          <div class="flex-row-between" style="margin-bottom:10px;">
+            <h4 style="color:white; font-family:var(--font-display); font-size:18px;"><i class="fas fa-bolt"></i> Daily Challenge</h4>
+            <span style="background:rgba(255,255,255,0.15); padding:3px 10px; border-radius:12px; font-size:12px; font-weight:700;" id="challenge-pill">⏳ Pending</span>
+          </div>
+          <p style="font-size:13px; opacity:0.85; margin-bottom:16px;">Solve today's 5-min puzzle to protect your streak flame!</p>
+          <a href="daily-challenges.html" class="btn" style="background:rgba(255,255,255,0.2); color:white; border:1px solid rgba(255,255,255,0.25); width:fit-content;"
+             onclick="STEMQuestUI.playAudio('click')">
+            Play Puzzle ⚡
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUBJECT WORLDS GRID -->
+    <div class="glass-card anim-slide-up" style="margin-bottom:24px; padding:24px;">
+      <div class="flex-row-between" style="margin-bottom:20px;">
+        <h3 style="font-family:var(--font-display); color:var(--neutral-dark); font-size:20px;">
+          <i class="fas fa-map" style="color:var(--primary-purple); margin-right:8px;"></i> STEM Kingdom Worlds
+        </h3>
+        <a href="quest-map.html" style="color:var(--primary-purple); font-size:14px; font-weight:700; text-decoration:none;"
+           onclick="STEMQuestUI.playAudio('click')">View Full Map →</a>
+      </div>
+      <div class="worlds-grid" id="worlds-grid">
+        <!-- Dynamically filled -->
+      </div>
+    </div>
+
+    <!-- BADGES PREVIEW -->
+    <div class="glass-card anim-slide-up" style="padding:24px;">
+      <div class="flex-row-between" style="margin-bottom:18px;">
+        <h3 style="font-family:var(--font-display); color:var(--neutral-dark); font-size:20px;">
+          <i class="fas fa-award" style="color:var(--warning-amber); margin-right:8px;"></i> Badges Cabinet
+        </h3>
+        <a href="badge-collection.html" style="color:var(--primary-purple); font-size:14px; font-weight:700; text-decoration:none;"
+           onclick="STEMQuestUI.playAudio('click')">View All →</a>
+      </div>
+      <div class="dashboard-badge-grid" id="badges-row"></div>
+    </div>
+
+  </main>
+</div>
+
+<script src="../js/state.js"></script>
+<script src="../js/db.js"></script>
+<script src="../js/ui.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    STEMQuestUI.initCommonUI('map');
+
+    const state = window.STEMQuestState.get();
+    if (!state.user.name) {
+      window.location.href = "login.html";
+      return;
     }
 
-    function resumeQuest() {
-      STEMQuestUI.playAudio('click');
-      window.location.href = "quest.html?id=phys_q1";
+    populateDashboard();
+    window.addEventListener("stemquest_state_changed", populateDashboard);
+  });
+
+  function populateDashboard() {
+    const state = window.STEMQuestState.get();
+
+    // --- Greeting ---
+    const hour = new Date().getHours();
+    const greet = hour < 12 ? "Good Morning 👋" : (hour < 17 ? "Good Afternoon 🌤️" : "Good Evening 🌙");
+    document.getElementById("greeting-text").innerText = greet;
+
+    // --- Name & Rank ---
+    document.getElementById("welcome-name").innerText = state.user.name || "Young Innovator";
+    document.getElementById("rank-badge-text").innerText = state.rank;
+
+    // --- Level XP bar ---
+    const lvl = state.level;
+    const nextLvlXP = Math.pow(lvl, 2) * 100;
+    const prevLvlXP = Math.pow(lvl - 1, 2) * 100;
+    const progress = Math.min(100, ((state.xp - prevLvlXP) / (nextLvlXP - prevLvlXP)) * 100);
+
+    document.getElementById("level-label").innerText = `Level ${lvl}`;
+    document.getElementById("xp-label").innerText = `${state.xp.toLocaleString()} / ${nextLvlXP.toLocaleString()} XP to Level ${lvl + 1}`;
+    setTimeout(() => {
+      document.getElementById("xp-bar-fill").style.width = progress + "%";
+    }, 400);
+
+    // --- Stats strip ---
+    document.getElementById("stats-streak").innerText = state.streak;
+    document.getElementById("stats-xp").innerText = state.xp.toLocaleString();
+    document.getElementById("stats-coins").innerText = state.coins;
+    document.getElementById("stats-quests").innerText = state.completedQuests.length;
+    document.getElementById("streak-num").innerText = state.streak;
+
+    // --- Daily challenge pill ---
+    const today = new Date().toDateString();
+    const pill = document.getElementById("challenge-pill");
+    if (state.dailyChallengeDate === today && state.dailyChallengeCompleted) {
+      pill.innerText = "✅ Done!";
+      pill.style.background = "rgba(5,150,105,0.3)";
     }
-  </script>
+
+    // --- Subject Worlds ---
+    renderWorldTiles(state);
+
+    // --- Badges ---
+    renderBadgeRow(state);
+  }
+
+  function renderWorldTiles(state) {
+    const worlds = [
+      { key: "physics", name: "Physics Peaks", icon: "fa-sun", color: "#7C3AED", bg: "rgba(124,58,237,0.1)", xpReq: 0 },
+      { key: "math",    name: "Math Mountains", icon: "fa-square-root-alt", color: "#3B82F6", bg: "rgba(59,130,246,0.1)", xpReq: 0 },
+      { key: "chemistry", name: "Chemistry Caves", icon: "fa-flask", color: "#EC4899", bg: "rgba(219,39,119,0.1)", xpReq: 0 },
+      { key: "biology", name: "Biology Jungle", icon: "fa-leaf", color: "#10B981", bg: "rgba(5,150,105,0.1)", xpReq: 1500 },
+      { key: "tech",    name: "Tech Valley", icon: "fa-laptop-code", color: "#06B6D4", bg: "rgba(6,182,212,0.1)", xpReq: 3500 },
+    ];
+
+    const grid = document.getElementById("worlds-grid");
+    grid.innerHTML = worlds.map(w => {
+      const locked = state.xp < w.xpReq;
+      return `
+        <div class="world-tile ${locked ? 'locked' : ''}"
+             style="background:${w.bg}; border-color:${locked ? 'var(--muted-gray)' : w.color}20;"
+             onclick="${locked ? `STEMQuestUI.playAudio('incorrect'); alert('Need ${w.xpReq} XP to unlock!')` : `STEMQuestUI.playAudio('click'); window.location.href='subject-world.html?subject=${w.key}'`}">
+          <i class="fas ${w.icon}" style="color:${locked ? '#9CA3AF' : w.color};"></i>
+          <h4 style="color:${locked ? '#9CA3AF' : 'var(--neutral-dark)'};">${w.name}</h4>
+          <p>${locked ? `🔒 ${w.xpReq} XP needed` : 'Explore World →'}</p>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function renderBadgeRow(state) {
+    const row = document.getElementById("badges-row");
+    const badges = window.STEMQuestDB.badges.slice(0, 8);
+    row.style.cssText = "display:flex; gap:12px; overflow-x:auto; padding: 4px 0;";
+    row.innerHTML = badges.map(b => {
+      const unlocked = state.badgeCollection.includes(b.id);
+      return `
+        <div style="flex:0 0 64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:22px;
+                    background:${unlocked ? 'rgba(219,39,119,0.1)' : 'var(--neutral-light)'};
+                    color:${unlocked ? 'var(--quest-pink)' : '#9CA3AF'};
+                    border:2px solid ${unlocked ? 'var(--quest-pink)' : 'var(--muted-gray)'};
+                    cursor:pointer; transition:transform 0.2s ease;"
+             title="${b.name}: ${b.desc}"
+             onclick="STEMQuestUI.playAudio('click')">
+          <i class="fas ${b.icon}"></i>
+        </div>
+      `;
+    }).join("");
+  }
+</script>
 </body>
 </html>

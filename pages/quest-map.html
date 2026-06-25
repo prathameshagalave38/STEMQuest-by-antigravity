@@ -3,132 +3,345 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>STEMQuest - Quest Map</title>
+  <title>STEMQuest - STEM Kingdom Map</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css">
   <link rel="stylesheet" href="../css/components.css">
   <link rel="stylesheet" href="../css/animations.css">
-  <link rel="stylesheet" href="../css/pages.css">
   <style>
-    body {
-      background: radial-gradient(circle at bottom left, rgba(107,33,168,0.05) 0%, rgba(243,244,246,1) 100%);
+    body { background: #0d1117; }
+
+    /* ===== MAP HEADER ===== */
+    .map-header {
+      background: rgba(15,10,30,0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 70px;
+      z-index: 100;
+    }
+    .map-title {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #A855F7, #EC4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* ===== WORLD CARDS GRID ===== */
+    .world-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+      padding: 24px 20px 110px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .world-card {
+      border-radius: 24px;
+      padding: 28px;
+      border: 1px solid transparent;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    .world-card:hover {
+      transform: translateY(-6px) scale(1.01);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    }
+    .world-card.locked { cursor: not-allowed; opacity: 0.6; }
+    .world-card.locked:hover { transform: none; }
+
+    .world-card-pattern {
+      position: absolute;
+      inset: 0;
+      opacity: 0.04;
+      background-image: radial-gradient(rgba(255,255,255,0.8) 1px, transparent 1px);
+      background-size: 16px 16px;
+      pointer-events: none;
+    }
+
+    .world-card-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+      position: relative;
+    }
+    .world-icon-ring {
+      width: 60px; height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      border: 2px solid rgba(255,255,255,0.2);
+      flex-shrink: 0;
+    }
+    .world-name {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 800;
+      color: white;
+    }
+    .world-tagline { font-size: 13px; color: rgba(255,255,255,0.6); margin-top: 2px; }
+
+    .world-stats { display: flex; gap: 16px; margin-bottom: 20px; position: relative; }
+    .wstat { text-align: center; flex: 1; }
+    .wstat-num { font-family: var(--font-display); font-size: 20px; font-weight: 800; color: white; }
+    .wstat-label { font-size: 11px; color: rgba(255,255,255,0.5); }
+
+    .world-progress-bar { height: 6px; background: rgba(255,255,255,0.1); border-radius: 6px; overflow: hidden; margin-bottom: 20px; position: relative; }
+    .world-progress-fill { height: 100%; border-radius: 6px; background: rgba(255,255,255,0.6); }
+
+    .world-chapters-preview {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
+    }
+    .chapter-mini {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 10px;
+      padding: 10px 14px;
+    }
+    .chapter-mini-icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+    .chapter-mini-name { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.85); flex: 1; }
+    .chapter-mini-status { font-size: 11px; }
+
+    .world-cta { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; position: relative; }
+    .world-cta-btn {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: white;
+      padding: 10px 22px;
+      border-radius: 12px;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .world-cta-btn:hover { background: rgba(255,255,255,0.25); }
+
+    .lock-overlay-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(220,38,38,0.2);
+      border: 1px solid rgba(220,38,38,0.3);
+      color: #FCA5A5;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    /* ===== XP TICKER ===== */
+    .xp-ticker {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(107,33,168,0.3);
+      border: 1px solid rgba(168,85,247,0.4);
+      color: #C4B5FD;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
     }
   </style>
 </head>
 <body>
+<div class="app-container">
 
-  <div class="app-container">
-    <main class="main-content">
-      <div class="flex-row-between anim-slide-up" style="margin-bottom: 20px;">
-        <div>
-          <h2>STEM Kingdom Maps</h2>
-          <p style="font-size: 14px; color: #4B5563;">Select a subject biome to continue your learning journey.</p>
-        </div>
-        <button class="btn btn-secondary btn-sm" onclick="window.location.href='dashboard.html'"><i class="fas fa-home"></i> Home</button>
-      </div>
-
-      <!-- Scrolling Map viewport -->
-      <div class="map-viewport anim-scale-in">
-        <div class="map-svg-container" id="map-container">
-          <!-- Connective Path Lines -->
-          <svg style="position: absolute; width:100%; height:100%; top:0; left:0; z-index:1;">
-            <line x1="200" y1="250" x2="350" y2="150" stroke="#CBD5E1" stroke-width="4" stroke-dasharray="8 8" />
-            <line x1="350" y1="150" x2="500" y2="350" stroke="#CBD5E1" stroke-width="4" stroke-dasharray="8 8" />
-            <line x1="200" y1="250" x2="450" y2="200" stroke="#CBD5E1" stroke-width="4" stroke-dasharray="8 8" />
-            <line x1="450" y1="200" x2="650" y2="250" stroke="#CBD5E1" stroke-width="4" stroke-dasharray="8 8" />
-          </svg>
-
-          <!-- Node 1: Physics Peaks -->
-          <div class="map-world-node" style="left: 200px; top: 250px;" onclick="loadSubject('physics')">
-            <div class="world-node-circle glow-purple">
-              <i class="fas fa-sun"></i>
-            </div>
-            <div class="world-node-title">Physics Peaks</div>
-          </div>
-
-          <!-- Node 2: Math Mountains -->
-          <div class="map-world-node" style="left: 350px; top: 150px;" onclick="loadSubject('math')">
-            <div class="world-node-circle glow-purple" style="border-color: #3b82f6; color: #3b82f6;">
-              <i class="fas fa-square-root-alt"></i>
-            </div>
-            <div class="world-node-title">Math Mountains</div>
-          </div>
-
-          <!-- Node 3: Chemistry Caves -->
-          <div class="map-world-node" style="left: 450px; top: 200px;" onclick="loadSubject('chemistry')">
-            <div class="world-node-circle glow-pink" style="border-color: var(--quest-pink); color: var(--quest-pink);">
-              <i class="fas fa-flask"></i>
-            </div>
-            <div class="world-node-title">Chemistry Caves</div>
-          </div>
-
-          <!-- Node 4: Biology Jungle (Locked until level 3 / 1500 XP) -->
-          <div class="map-world-node" style="left: 500px; top: 350px;" id="node-biology" onclick="loadSubject('biology', 1500)">
-            <div class="world-node-circle locked">
-              <i class="fas fa-lock"></i>
-            </div>
-            <div class="world-node-title">Biology Jungle <span style="font-size:10px; color:#DC2626;">(1,500 XP)</span></div>
-          </div>
-
-          <!-- Node 5: Tech Valley (Locked until level 4 / 3500 XP) -->
-          <div class="map-world-node" style="left: 650px; top: 250px;" id="node-tech" onclick="loadSubject('tech', 3500)">
-            <div class="world-node-circle locked">
-              <i class="fas fa-lock"></i>
-            </div>
-            <div class="world-node-title">Tech Valley <span style="font-size:10px; color:#DC2626;">(3,500 XP)</span></div>
-          </div>
-        </div>
-      </div>
-    </main>
+  <!-- STICKY MAP HEADER -->
+  <div class="map-header">
+    <div class="map-title"><i class="fas fa-map" style="margin-right:8px;"></i>STEM Kingdom Map</div>
+    <div class="xp-ticker" id="header-xp-ticker">
+      <i class="fas fa-star"></i> <span id="total-xp-display">Loading...</span>
+    </div>
   </div>
 
-  <script src="../js/state.js"></script>
-  <script src="../js/db.js"></script>
-  <script src="../js/ui.js"></script>
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      STEMQuestUI.initCommonUI('map');
-      checkMapLocks();
-    });
+  <!-- WORLD CARDS GRID -->
+  <div class="world-cards-grid" id="worlds-grid">
+    <!-- Dynamically rendered by JS -->
+  </div>
 
-    function checkMapLocks() {
-      const state = window.STEMQuestState.get();
-      const xp = state.xp;
+</div>
 
-      // Biology unlock check
-      if (xp >= 1500) {
-        const bio = document.getElementById("node-biology");
-        const circle = bio.querySelector(".world-node-circle");
-        circle.className = "world-node-circle glow-purple";
-        circle.style.borderColor = "#059669";
-        circle.style.color = "#059669";
-        circle.innerHTML = `<i class="fas fa-leaf"></i>`;
-        bio.querySelector(".world-node-title").innerHTML = "Biology Jungle";
+<script src="../js/state.js"></script>
+<script src="../js/db.js"></script>
+<script src="../js/ui.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    STEMQuestUI.initCommonUI('map');
+    renderMap();
+  });
+
+  function renderMap() {
+    const state = window.STEMQuestState.get();
+    if (!state.user.name) { window.location.href = "login.html"; return; }
+
+    document.getElementById("total-xp-display").innerText = `${state.xp.toLocaleString()} XP`;
+
+    const worlds = [
+      {
+        key: "physics",
+        name: "Physics Peaks",
+        tagline: "Unleash the forces that power and build worlds!",
+        icon: "fa-sun",
+        bg: "linear-gradient(135deg, #4C1D95, #7C3AED)",
+        iconBg: "rgba(168,85,247,0.25)",
+        iconColor: "#C4B5FD",
+        xpReq: 0,
+        chapters: [
+          { name: "Restoring the Village Grid (Electricity)", id: "phys_ch1", done: state.unlockedChapters.includes("phys_ch1") },
+          { name: "The Power of Levers (Forces & Motion)", id: "phys_ch2", done: state.unlockedChapters.includes("phys_ch2") }
+        ]
+      },
+      {
+        key: "math",
+        name: "Math Mountains",
+        tagline: "Unlock coordinates and balance equations!",
+        icon: "fa-square-root-alt",
+        bg: "linear-gradient(135deg, #1E3A5F, #2563EB)",
+        iconBg: "rgba(96,165,250,0.25)",
+        iconColor: "#93C5FD",
+        xpReq: 0,
+        chapters: [
+          { name: "Division at the Village Bakery (Fractions)", id: "math_ch1", done: state.unlockedChapters.includes("math_ch1") },
+          { name: "Building the Geometry Bridge (Triangles)", id: "math_ch2", done: state.unlockedChapters.includes("math_ch2") }
+        ]
+      },
+      {
+        key: "chemistry",
+        name: "Chemistry Caves",
+        tagline: "Mix elements, reactions, and protect the village water!",
+        icon: "fa-flask",
+        bg: "linear-gradient(135deg, #6B2147, #DB2777)",
+        iconBg: "rgba(236,72,153,0.25)",
+        iconColor: "#F9A8D4",
+        xpReq: 0,
+        chapters: [
+          { name: "Cleaning the Well (pH & Acids/Bases)", id: "chem_ch1", done: state.unlockedChapters.includes("chem_ch1") }
+        ]
+      },
+      {
+        key: "biology",
+        name: "Biology Jungle",
+        tagline: "Explore cellular secrets and nature's ecosystems!",
+        icon: "fa-leaf",
+        bg: "linear-gradient(135deg, #054731, #059669)",
+        iconBg: "rgba(52,211,153,0.25)",
+        iconColor: "#6EE7B7",
+        xpReq: 1500,
+        chapters: [
+          { name: "The Living Cell (Organelles & Functions)", id: "bio_ch1", done: false },
+          { name: "Ecosystem Patrol (Food Chains)", id: "bio_ch2", done: false }
+        ]
+      },
+      {
+        key: "tech",
+        name: "Tech Valley",
+        tagline: "Program logic grids, robots, and AI circuits!",
+        icon: "fa-laptop-code",
+        bg: "linear-gradient(135deg, #0C3547, #0891B2)",
+        iconBg: "rgba(34,211,238,0.25)",
+        iconColor: "#67E8F9",
+        xpReq: 3500,
+        chapters: [
+          { name: "Binary Village Code (Logic Gates)", id: "tech_ch1", done: false },
+          { name: "Robot Patrol (Basic Conditionals)", id: "tech_ch2", done: false }
+        ]
       }
+    ];
 
-      // Tech unlock check
-      if (xp >= 3500) {
-        const tech = document.getElementById("node-tech");
-        const circle = tech.querySelector(".world-node-circle");
-        circle.className = "world-node-circle glow-purple";
-        circle.style.borderColor = "#06b6d4";
-        circle.style.color = "#06b6d4";
-        circle.innerHTML = `<i class="fas fa-laptop-code"></i>`;
-        tech.querySelector(".world-node-title").innerHTML = "Tech Valley";
-      }
-    }
+    const grid = document.getElementById("worlds-grid");
+    grid.innerHTML = worlds.map((w, i) => {
+      const locked = state.xp < w.xpReq;
+      const totalCh = w.chapters.length;
+      const doneCh = w.chapters.filter(c => c.done).length;
+      const prog = Math.round((doneCh / totalCh) * 100);
 
-    function loadSubject(subjectKey, xpReq = 0) {
-      const state = window.STEMQuestState.get();
-      if (state.xp < xpReq) {
-        STEMQuestUI.playAudio('incorrect');
-        alert(`You need ${xpReq} XP to unlock this world! Try completing open quests first.`);
-        return;
-      }
+      return `
+        <div class="world-card ${locked ? 'locked' : ''} anim-slide-up"
+             style="background:${w.bg}; border-color: rgba(255,255,255,0.1); animation-delay:${i * 0.08}s;"
+             onclick="${locked ? `STEMQuestUI.showToast('🔒 Need ${w.xpReq.toLocaleString()} XP to unlock ${w.name}!')` : `goToWorld('${w.key}')`}">
+          <div class="world-card-pattern"></div>
 
-      STEMQuestUI.playAudio('click');
-      window.location.href = `subject-world.html?subject=${subjectKey}`;
-    }
-  </script>
+          <div class="world-card-header">
+            <div class="world-icon-ring" style="background:${w.iconBg}; color:${w.iconColor};">
+              <i class="fas ${w.icon}"></i>
+            </div>
+            <div>
+              <div class="world-name">${w.name}</div>
+              <div class="world-tagline">${w.tagline}</div>
+            </div>
+          </div>
+
+          <div class="world-stats">
+            <div class="wstat">
+              <div class="wstat-num">${totalCh}</div>
+              <div class="wstat-label">Chapters</div>
+            </div>
+            <div class="wstat">
+              <div class="wstat-num">${doneCh}</div>
+              <div class="wstat-label">Completed</div>
+            </div>
+            <div class="wstat">
+              <div class="wstat-num">${prog}%</div>
+              <div class="wstat-label">Progress</div>
+            </div>
+          </div>
+
+          <div class="world-progress-bar">
+            <div class="world-progress-fill" style="width:${prog}%;"></div>
+          </div>
+
+          <div class="world-chapters-preview">
+            ${w.chapters.map(ch => `
+              <div class="chapter-mini">
+                <div class="chapter-mini-icon" style="background:${ch.done ? 'rgba(5,150,105,0.3)' : 'rgba(255,255,255,0.1)'}; color:${ch.done ? '#34D399' : 'rgba(255,255,255,0.6)'};">
+                  <i class="fas ${ch.done ? 'fa-check' : 'fa-lock'}"></i>
+                </div>
+                <div class="chapter-mini-name">${ch.name}</div>
+                <div class="chapter-mini-status" style="color:${ch.done ? '#34D399' : 'rgba(255,255,255,0.4)'};">
+                  ${ch.done ? '✅ Done' : locked ? '🔒' : '▶'}
+                </div>
+              </div>
+            `).join("")}
+          </div>
+
+          <div class="world-cta" style="margin-top:18px;">
+            ${locked
+              ? `<div class="lock-overlay-badge"><i class="fas fa-lock"></i> ${w.xpReq.toLocaleString()} XP to unlock</div>`
+              : `<button class="world-cta-btn" onclick="event.stopPropagation(); goToWorld('${w.key}')">
+                   Explore World <i class="fas fa-arrow-right"></i>
+                 </button>
+                 <span style="font-size:13px; color:rgba(255,255,255,0.5);">${doneCh}/${totalCh} chapters</span>`
+            }
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function goToWorld(subjectKey) {
+    STEMQuestUI.playAudio('click');
+    window.location.href = `subject-world.html?subject=${subjectKey}`;
+  }
+</script>
 </body>
 </html>

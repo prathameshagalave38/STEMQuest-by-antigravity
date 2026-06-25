@@ -147,19 +147,18 @@ const STEMQuestUI = {
     nav.className = "app-nav";
 
     const tabs = [
-      { id: "map", name: "Quest Map", icon: "fa-compass", link: `${prefix}pages/quest-map.html` },
-      { id: "lab", name: "STEM Lab", icon: "fa-flask", link: `${prefix}pages/virtual-lab.html` },
-      { id: "arena", name: "Arena", icon: "fa-shield-halved", iconAlt: "fa-trophy", link: `${prefix}pages/battle-arena.html` },
-      { id: "galaxy", name: "Galaxy Profile", icon: "fa-user", link: `${prefix}pages/profile.html` },
-      { id: "settings", name: "Settings", icon: "fa-cog", link: `${prefix}pages/settings.html` }
+      { id: "home",     name: "Home",     icon: "fa-house",          link: `${prefix}pages/dashboard.html` },
+      { id: "map",      name: "Quests",   icon: "fa-compass",        link: `${prefix}pages/quest-map.html` },
+      { id: "lab",      name: "Lab",      icon: "fa-flask",          link: `${prefix}pages/virtual-lab.html` },
+      { id: "arena",    name: "Arena",    icon: "fa-trophy",         link: `${prefix}pages/battle-arena.html` },
+      { id: "profile",  name: "Profile",  icon: "fa-user-astronaut", link: `${prefix}pages/profile.html` },
     ];
 
     nav.innerHTML = tabs.map(tab => {
       const isActive = tab.id === activeTab ? 'active' : '';
-      const iconClass = tab.id === 'arena' ? 'fas fa-trophy' : `fas ${tab.icon}`;
       return `
         <a href="${tab.link}" class="nav-item ${isActive}" onclick="STEMQuestUI.playAudio('click')">
-          <i class="${iconClass}"></i>
+          <i class="fas ${tab.icon}"></i>
           <span>${tab.name}</span>
         </a>
       `;
@@ -364,6 +363,21 @@ const STEMQuestUI = {
     const overlay = document.getElementById("stemquest-modal-overlay");
     if (overlay) overlay.style.display = "none";
     this.playAudio('click');
+  },
+
+  // Show a brief toast notification at bottom of screen
+  showToast(message, durationMs = 2500) {
+    let toast = document.getElementById("stemquest-toast");
+    if (!toast) {
+      toast = document.createElement("div");
+      toast.id = "stemquest-toast";
+      toast.className = "stemquest-toast";
+      document.body.appendChild(toast);
+    }
+    toast.innerText = message;
+    toast.classList.add("show");
+    clearTimeout(toast._hideTimer);
+    toast._hideTimer = setTimeout(() => toast.classList.remove("show"), durationMs);
   }
 };
 
