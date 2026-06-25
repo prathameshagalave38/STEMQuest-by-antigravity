@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STEMQuest - Battle Arena</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/animations.css">
+  <link rel="stylesheet" href="../css/pages.css">
+  <style>
+    .matchmaking-avatar {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: var(--lavender-fill);
+      border: 3px solid var(--primary-purple);
+      margin: 0 auto 15px auto;
+      overflow: hidden;
+    }
+    .timer-circle {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--lavender-fill);
+      color: var(--primary-purple);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 16px;
+      border: 2px solid var(--primary-purple);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <main class="main-content" style="max-width: 800px;">
+      
+      <!-- Screen 1: Lobby & Matchmaking -->
+      <div id="screen-lobby" class="anim-slide-up">
+        <div style="text-align:center; margin-bottom:30px;">
+          <h2 style="font-size: 28px; color: var(--primary-purple);"><i class="fas fa-trophy"></i> The Battle Arena</h2>
+          <p style="font-size: 14px; color: #4B5563;">Duel classmates in quick science battles to earn ranking points.</p>
+        </div>
+
+        <div class="glass-card" style="text-align:center; padding: 40px 20px; max-width:450px; margin: 0 auto;">
+          <div class="matchmaking-avatar" id="lobby-user-avatar"></div>
+          <h3 id="lobby-user-name">Young Innovator</h3>
+          <p style="font-size:13px; color:#6B7280; margin-bottom:24px;">Level 1 • Curious Cub</p>
+          <button class="btn btn-accent btn-lg" style="width:100%;" onclick="startMatchmaking()">Find Quick Match</button>
+        </div>
+      </div>
+
+      <!-- Screen 2: Matchmaker Searching Overlay -->
+      <div id="screen-matching" style="display:none;" class="anim-scale-in">
+        <div class="matchmaking-box glass-card">
+          <div class="radar-spinner"></div>
+          <h2>Finding Opponent...</h2>
+          <p style="font-size: 14px; color:#4B5563; margin-top:10px;" id="match-status">Scanning class roster...</p>
+          
+          <div style="display:flex; justify-content:center; align-items:center; gap:30px; margin-top:30px;">
+            <div>
+              <div class="matchmaking-avatar" id="matching-user-avatar"></div>
+              <span style="font-size:12px; font-weight:700;">You</span>
+            </div>
+            <div style="font-size:24px; font-weight:700; color:var(--quest-pink);">VS</div>
+            <div>
+              <div class="matchmaking-avatar" style="border-color:#6B7280;"><i class="fas fa-question" style="font-size:24px; line-height:64px; color:#9CA3AF;"></i></div>
+              <span style="font-size:12px; font-weight:700; color:#6B7280;" id="matching-enemy-name">Searching...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Screen 3: Active Duel -->
+      <div id="screen-duel" style="display:none;" class="anim-scale-in">
+        <!-- Battle HUD -->
+        <div class="battle-header glass-card" style="padding:15px; margin-bottom: 20px;">
+          <!-- User status -->
+          <div style="flex:1;">
+            <span style="font-weight:700; font-size:14px;" id="duel-user-name">You</span>
+            <div class="battle-health-bar"><div class="battle-health-fill" id="hp-user-fill"></div></div>
+          </div>
+          <!-- Timer -->
+          <div style="margin: 0 20px;">
+            <div class="timer-circle" id="duel-timer-val">10</div>
+          </div>
+          <!-- Enemy status -->
+          <div style="flex:1; text-align:right;">
+            <span style="font-weight:700; font-size:14px;" id="duel-enemy-name">Opponent</span>
+            <div class="battle-health-bar"><div class="battle-health-fill enemy" id="hp-enemy-fill"></div></div>
+          </div>
+        </div>
+
+        <!-- Question Display Card -->
+        <div class="quest-step-content" id="duel-question-card">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="../js/state.js"></script>
+  <script src="../js/db.js"></script>
+  <script src="../js/ui.js"></script>
+  <script>
+    let opponentName = "";
+    let duelQuestions = [];
+    let currentQIdx = 0;
+    let userHP = 100;
+    let enemyHP = 100;
+    let timerValue = 10;
+    let timerInterval = null;
+    let isQAnswered = false;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      STEMQuestUI.initCommonUI('arena');
+      
+      // Load user profile details for the lobby
+      const state = window.STEMQuestState.get();
+      document.getElementById("lobby-user-avatar").innerHTML = STEMQuestUI.getAvatarSVG(state.user.avatar);
+      document.getElementById("lobby-user-name").innerText = state.user.name || "Young Innovator";
+    });
+
+    function startMatchmaking() {
+      STEMQuestUI.playAudio('click');
+      document.getElementById("screen-lobby").style.display = "none";
+      document.getElementById("screen-matching").style.display = "block";
+
+      // Matchmaking cycle simulation
+      const searchStates = ["Searching Class grids...", "Connecting to server...", "Match found! Preparing arena..."];
+      let idx = 0;
+      const interval = setInterval(() => {
+        if (idx < searchStates.length) {
+          document.getElementById("match-status").innerText = searchStates[idx];
+          idx++;
+        } else {
+          clearInterval(interval);
+          concludeMatchmaking();
+        }
+      }, 1000);
+    }
+
+    function concludeMatchmaking() {
+      // Pick random mock profile from database
+      const candidates = window.STEMQuestDB.leaderboard.class.filter(u => !u.isUser);
+      const enemy = candidates[Math.floor(Math.random() * candidates.length)];
+      opponentName = enemy.name;
+
+      document.getElementById("matching-enemy-name").innerText = opponentName;
+      document.getElementById("matching-enemy-name").style.color = "var(--neutral-dark)";
+      
+      STEMQuestUI.playAudio('correct');
+
+      setTimeout(() => {
+        // Trigger battle layout
+        document.getElementById("screen-matching").style.display = "none";
+        document.getElementById("screen-duel").style.display = "block";
+        setupDuel();
+      }, 1000);
+    }
+
+    function setupDuel() {
+      const state = window.STEMQuestState.get();
+      document.getElementById("duel-user-name").innerText = state.user.name;
+      document.getElementById("duel-enemy-name").innerText = opponentName;
+      
+      // Fetch 3 random questions from DB
+      duelQuestions = [
+        {
+          q: "What component is used to measure electrical pressure?",
+          options: ["Ammeter", "Voltmeter", "Galvanometer", "Resistor"],
+          correctIndex: 1,
+          explanation: "Voltage is potential difference or pressure, measured in Volts via a Voltmeter."
+        },
+        {
+          q: "What happens to the denominator when you divide a pizza into MORE slices?",
+          options: ["It increases", "It decreases", "It stays the same", "It turns negative"],
+          correctIndex: 0,
+          explanation: "More parts means a larger denominator (the bottom value representing the total parts)."
+        },
+        {
+          q: "Which element holds a positive electric charge inside an atom?",
+          options: ["Electron", "Neutron", "Proton", "Molecule"],
+          correctIndex: 2,
+          explanation: "Protons carry positive charge, neutrons have zero charge, and electrons are negative."
+        }
+      ];
+
+      currentQIdx = 0;
+      userHP = 100;
+      enemyHP = 100;
+
+      updateDuelHUD();
+      loadDuelQuestion();
+    }
+
+    function updateDuelHUD() {
+      document.getElementById("hp-user-fill").style.width = userHP + "%";
+      document.getElementById("hp-enemy-fill").style.width = enemyHP + "%";
+    }
+
+    function loadDuelQuestion() {
+      isQAnswered = false;
+      const card = document.getElementById("duel-question-card");
+      const q = duelQuestions[currentQIdx];
+
+      card.innerHTML = `
+        <div class="anim-slide-up">
+          <span style="font-size:12px; font-weight:700; color:var(--primary-purple); text-transform:uppercase;">Round ${currentQIdx + 1} of 3</span>
+          <h3 style="font-size:18px; margin-top:5px; margin-bottom:20px;">${q.q}</h3>
+          
+          <div class="flex-column" id="arena-options">
+            ${q.options.map((opt, idx) => `
+              <div class="mcq-option" onclick="submitArenaAnswer(${idx}, ${q.correctIndex})">
+                <span style="width: 24px; height: 24px; border-radius:50%; border:2px solid var(--muted-gray); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700;">${String.fromCharCode(65 + idx)}</span>
+                <span>${opt}</span>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      `;
+
+      // Start timer countdown
+      timerValue = 10;
+      document.getElementById("duel-timer-val").innerText = timerValue;
+      
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        timerValue--;
+        document.getElementById("duel-timer-val").innerText = timerValue;
+        if (timerValue <= 0) {
+          clearInterval(timerInterval);
+          handleTimeOut();
+        }
+      }, 1000);
+    }
+
+    function submitArenaAnswer(idx, correctIdx) {
+      if (isQAnswered) return;
+      isQAnswered = true;
+      clearInterval(timerInterval);
+
+      const options = document.getElementById("arena-options").children;
+      
+      if (idx === correctIdx) {
+        options[idx].classList.add("correct");
+        STEMQuestUI.playAudio('correct');
+        // Enemy takes hit
+        enemyHP = Math.max(0, enemyHP - 35);
+      } else {
+        options[idx].classList.add("incorrect");
+        options[correctIdx].classList.add("correct");
+        STEMQuestUI.playAudio('incorrect');
+        // User takes hit
+        userHP = Math.max(0, userHP - 35);
+      }
+
+      updateDuelHUD();
+
+      // Check results or transition
+      setTimeout(() => {
+        if (userHP <= 0 || enemyHP <= 0 || currentQIdx === duelQuestions.length - 1) {
+          concludeDuel();
+        } else {
+          currentQIdx++;
+          loadDuelQuestion();
+        }
+      }, 1500);
+    }
+
+    function handleTimeOut() {
+      isQAnswered = true;
+      alert("Time's up! You took damage.");
+      STEMQuestUI.playAudio('incorrect');
+      
+      userHP = Math.max(0, userHP - 35);
+      updateDuelHUD();
+
+      setTimeout(() => {
+        if (userHP <= 0 || currentQIdx === duelQuestions.length - 1) {
+          concludeDuel();
+        } else {
+          currentQIdx++;
+          loadDuelQuestion();
+        }
+      }, 1500);
+    }
+
+    function concludeDuel() {
+      clearInterval(timerInterval);
+      const isVictory = enemyHP < userHP;
+
+      if (isVictory) {
+        STEMQuestUI.playAudio('level-up');
+        // Award XP and Coins
+        window.STEMQuestState.addXP(80);
+        window.STEMQuestState.addCoins(25);
+        window.STEMQuestState.addBadge("comeback-kid"); // Add Duelist progress badge
+      } else {
+        STEMQuestUI.playAudio('incorrect');
+      }
+
+      const overlay = document.getElementById("stemquest-modal-overlay");
+      const content = document.getElementById("stemquest-modal-content");
+      if (overlay && content) {
+        content.innerHTML = `
+          <div style="font-size: 60px; margin-bottom: 10px;">${isVictory ? '👑' : '💪'}</div>
+          <h2 style="font-size: 32px; color: ${isVictory ? 'var(--success-green)' : 'var(--danger-red)'}; margin-bottom: 10px;">
+            ${isVictory ? 'Victory!' : 'Keep Practicing!'}
+          </h2>
+          <p style="font-size: 15px; color:#4B5563; margin-bottom: 20px;">
+            ${isVictory ? `You defeated ${opponentName} in a close match!` : `${opponentName} had a slightly faster answer score. You can do it next time!`}
+          </p>
+          ${isVictory ? `
+            <div style="display:flex; justify-content:center; gap:20px; margin-bottom:30px;">
+              <div class="stat-chip xp" style="padding:8px 16px;"><i class="fas fa-star"></i> +80 XP</div>
+              <div class="stat-chip coins" style="padding:8px 16px;"><i class="fas fa-coins"></i> +25 Coins</div>
+            </div>
+          ` : ''}
+          <button class="btn btn-primary" onclick="exitDuel()">Return to Lobby</button>
+        `;
+        overlay.style.display = "flex";
+        if (isVictory) STEMQuestUI.triggerConfetti();
+      }
+    }
+
+    function exitDuel() {
+      STEMQuestUI.closeModal();
+      window.location.reload();
+    }
+  </script>
+</body>
+</html>

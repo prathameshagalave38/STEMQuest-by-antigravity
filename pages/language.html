@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STEMQuest - Choose Language</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/animations.css">
+  <link rel="stylesheet" href="../css/pages.css">
+  <style>
+    body {
+      background: radial-gradient(circle at bottom left, rgba(107,33,168,0.1) 0%, rgba(219,39,119,0.05) 50%, rgba(243,244,246,1) 100%);
+    }
+    .lang-header {
+      text-align: center;
+      margin: 60px auto 30px auto;
+      max-width: 600px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="main-content" style="padding-top: 40px;">
+    <div class="lang-header anim-slide-up">
+      <i class="fas fa-language" style="font-size: 50px; color: var(--primary-purple); margin-bottom: 15px;"></i>
+      <h2>Select Your Language</h2>
+      <p style="font-size: 16px; color: #4B5563; margin-top: 5px;">अपनी पसंदीदा भाषा चुनें (Select your preferred language)</p>
+    </div>
+
+    <!-- Grid of Languages -->
+    <div class="choice-grid anim-slide-up" style="max-width: 800px; margin: 0 auto 40px auto;">
+      <div class="choice-card selected" onclick="selectLang('en', this)" id="lang-en">
+        <i class="fas fa-globe-asia"></i>
+        <h3>English</h3>
+        <p style="font-size: 11px; opacity: 0.7;">Default System English</p>
+      </div>
+      <div class="choice-card" onclick="selectLang('hi', this)" id="lang-hi">
+        <i class="fas fa-book-open"></i>
+        <h3>हिंदी</h3>
+        <p style="font-size: 11px; opacity: 0.7;">Hindi Translation</p>
+      </div>
+      <div class="choice-card" onclick="selectLang('mr', this)" id="lang-mr">
+        <i class="fas fa-feather"></i>
+        <h3>मराठी</h3>
+        <p style="font-size: 11px; opacity: 0.7;">Marathi Translation</p>
+      </div>
+      <div class="choice-card" onclick="selectLang('ta', this)" id="lang-ta">
+        <i class="fas fa-scroll"></i>
+        <h3>தமிழ்</h3>
+        <p style="font-size: 11px; opacity: 0.7;">Tamil Translation</p>
+      </div>
+      <div class="choice-card" onclick="selectLang('te', this)" id="lang-te">
+        <i class="fas fa-book"></i>
+        <h3>తెలుగు</h3>
+        <p style="font-size: 11px; opacity: 0.7;">Telugu Translation</p>
+      </div>
+      <div class="choice-card" onclick="selectLang('kn', this)" id="lang-kn">
+        <i class="fas fa-bookmark"></i>
+        <h3>ಕನ್ನಡ</h3>
+        <p style="font-size: 11px; opacity: 0.7;">Kannada Translation</p>
+      </div>
+      <div class="choice-card" onclick="selectLang('bn', this)" id="lang-bn">
+        <i class="fas fa-pen-fancy"></i>
+        <h3>বাংলা</h3>
+        <p style="font-size: 11px; opacity: 0.7;">Bengali Translation</p>
+      </div>
+      <div class="choice-card" onclick="selectLang('gu', this)" id="lang-gu">
+        <i class="fas fa-signature"></i>
+        <h3>ગુજરાતી</h3>
+        <p style="font-size: 11px; opacity: 0.7;">Gujarati Translation</p>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div style="text-align: center;" class="anim-slide-up">
+      <button class="btn btn-primary btn-lg" onclick="saveLanguage()" style="min-width: 200px;">
+        Next Step <i class="fas fa-arrow-right"></i>
+      </button>
+    </div>
+  </div>
+
+  <script src="../js/state.js"></script>
+  <script src="../js/ui.js"></script>
+  <script>
+    let selectedLang = 'en';
+
+    function selectLang(lang, element) {
+      selectedLang = lang;
+      STEMQuestUI.playAudio('click');
+      
+      // Update highlights
+      document.querySelectorAll(".choice-card").forEach(card => card.classList.remove("selected"));
+      element.classList.add("selected");
+
+      // Optional TTS confirmation
+      if ('speechSynthesis' in window) {
+        let text = "Language selected";
+        if (lang === 'hi') text = "भाषा चुनी गई";
+        if (lang === 'mr') text = "भाषा निवडली";
+        
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = lang === 'hi' ? 'hi-IN' : (lang === 'mr' ? 'mr-IN' : 'en-US');
+        utterance.rate = 0.9;
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    function saveLanguage() {
+      STEMQuestUI.playAudio('correct');
+      // Save lang to state
+      window.STEMQuestState.updateUser({ language: selectedLang });
+      setTimeout(() => {
+        window.location.href = "class-select.html";
+      }, 400);
+    }
+  </script>
+</body>
+</html>

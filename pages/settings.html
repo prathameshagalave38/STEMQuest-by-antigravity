@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STEMQuest - Settings</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/animations.css">
+  <link rel="stylesheet" href="../css/pages.css">
+  <style>
+    .settings-container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .setting-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--muted-gray);
+    }
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #E5E7EB;
+      transition: .3s;
+      border-radius: 24px;
+    }
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+    input:checked + .toggle-slider {
+      background-color: var(--primary-purple);
+    }
+    input:checked + .toggle-slider:before {
+      transform: translateX(20px);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <main class="main-content">
+      <div class="settings-container">
+        
+        <h2 class="anim-slide-up" style="margin-bottom: 24px; color: var(--primary-purple);"><i class="fas fa-cog"></i> Platform Settings</h2>
+
+        <!-- Customizations Card -->
+        <div class="glass-card anim-scale-in" style="padding: 24px; display:flex; flex-direction:column; gap:10px;">
+          
+          <!-- Sound Toggle -->
+          <div class="setting-row">
+            <div>
+              <h4 style="font-size: 16px;"><i class="fas fa-volume-up" style="margin-right:8px; color:var(--primary-purple);"></i> Sound Effects</h4>
+              <p style="font-size:12px; color:#6B7280;">Synthesis retro sound chimes on achievements.</p>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="toggle-sound" onchange="toggleSound()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <!-- Dark Mode Toggle -->
+          <div class="setting-row">
+            <div>
+              <h4 style="font-size: 16px;"><i class="fas fa-moon" style="margin-right:8px; color:var(--primary-purple);"></i> Dark Theme Mode</h4>
+              <p style="font-size:12px; color:#6B7280;">High-contrast layout for night time reading.</p>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="toggle-dark" onchange="toggleDarkMode()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <!-- Language Selector -->
+          <div class="setting-row">
+            <div>
+              <h4 style="font-size: 16px;"><i class="fas fa-globe" style="margin-right:8px; color:var(--primary-purple);"></i> Preferred Language</h4>
+              <p style="font-size:12px; color:#6B7280;">Modify target regional languages text.</p>
+            </div>
+            <select class="input-field btn-sm" style="padding: 8px 12px; background:white; font-size:13px; border-width:1px;" id="select-lang-opt" onchange="changeLanguage(this.value)">
+              <option value="en">English</option>
+              <option value="hi">हिंदी (Hindi)</option>
+              <option value="mr">मराठी (Marathi)</option>
+              <option value="ta">தமிழ் (Tamil)</option>
+            </select>
+          </div>
+
+          <!-- Offline cache files size -->
+          <div class="setting-row">
+            <div>
+              <h4 style="font-size: 16px;"><i class="fas fa-hdd" style="margin-right:8px; color:var(--primary-purple);"></i> Offline Course Packets</h4>
+              <p style="font-size:12px; color:#6B7280;">Subjects packages saved locally: <strong>485 MB</strong>.</p>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="clearLocalCache()">Clear Cache</button>
+          </div>
+
+          <!-- Streak Shield buy shop -->
+          <div class="setting-row" style="border-bottom:none;">
+            <div>
+              <h4 style="font-size: 16px;"><i class="fas fa-shield-alt" style="margin-right:8px; color:var(--primary-purple);"></i> Streak Shields</h4>
+              <p style="font-size:12px; color:#6B7280;">Shields protect flame if you miss a day. Cost: <strong>50 Coins</strong>.</p>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="font-weight:700; font-size:14px; color:var(--warning-amber);" id="streak-shields-count">0 Owned</span>
+              <button class="btn btn-primary btn-sm" onclick="buyShield()">Buy Shield</button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/state.js"></script>
+  <script src="../js/ui.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      STEMQuestUI.initCommonUI('settings');
+      loadSettingsUI();
+    });
+
+    function loadSettingsUI() {
+      const state = window.STEMQuestState.get();
+
+      document.getElementById("toggle-sound").checked = state.soundEnabled;
+      document.getElementById("toggle-dark").checked = state.darkMode;
+      document.getElementById("select-lang-opt").value = state.user.language;
+      document.getElementById("streak-shields-count").innerText = `${state.streakShields} Owned`;
+    }
+
+    function toggleSound() {
+      const active = document.getElementById("toggle-sound").checked;
+      window.STEMQuestState.state.soundEnabled = active;
+      window.STEMQuestState.save();
+      STEMQuestUI.playAudio('click');
+    }
+
+    function toggleDarkMode() {
+      window.STEMQuestState.toggleDarkMode();
+      STEMQuestUI.playAudio('click');
+    }
+
+    function changeLanguage(langVal) {
+      window.STEMQuestState.updateUser({ language: langVal });
+      STEMQuestUI.playAudio('correct');
+    }
+
+    function buyShield() {
+      const price = 50;
+      if (window.STEMQuestState.spendCoins(price)) {
+        window.STEMQuestState.state.streakShields += 1;
+        window.STEMQuestState.save();
+        STEMQuestUI.playAudio('correct');
+        document.getElementById("streak-shields-count").innerText = `${window.STEMQuestState.state.streakShields} Owned`;
+        alert("Bought 1 Streak Shield! Your flame is now protected from a missed day.");
+      } else {
+        STEMQuestUI.playAudio('incorrect');
+        alert("You do not have enough STEM Coins! Try solving more quests to earn coins.");
+      }
+    }
+
+    function clearLocalCache() {
+      STEMQuestUI.playAudio('click');
+      if (confirm("This will delete all cached study content. You will need internet to load videos. Proceed?")) {
+        alert("Offline course packets cleared successfully.");
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STEMQuest - Quest Map</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/animations.css">
+  <link rel="stylesheet" href="../css/pages.css">
+  <style>
+    body {
+      background: radial-gradient(circle at bottom left, rgba(107,33,168,0.05) 0%, rgba(243,244,246,1) 100%);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <main class="main-content">
+      <div class="flex-row-between anim-slide-up" style="margin-bottom: 20px;">
+        <div>
+          <h2>STEM Kingdom Maps</h2>
+          <p style="font-size: 14px; color: #4B5563;">Select a subject biome to continue your learning journey.</p>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="window.location.href='dashboard.html'"><i class="fas fa-home"></i> Home</button>
+      </div>
+
+      <!-- Scrolling Map viewport -->
+      <div class="map-viewport anim-scale-in">
+        <div class="map-svg-container" id="map-container">
+          <!-- Connective Path Lines -->
+          <svg style="position: absolute; width:100%; height:100%; top:0; left:0; z-index:1;">
+            <line x1="200" y1="250" x2="350" y2="150" stroke="#CBD5E1" stroke-width="4" stroke-dasharray="8 8" />
+            <line x1="350" y1="150" x2="500" y2="350" stroke="#CBD5E1" stroke-width="4" stroke-dasharray="8 8" />
+            <line x1="200" y1="250" x2="450" y2="200" stroke="#CBD5E1" stroke-width="4" stroke-dasharray="8 8" />
+            <line x1="450" y1="200" x2="650" y2="250" stroke="#CBD5E1" stroke-width="4" stroke-dasharray="8 8" />
+          </svg>
+
+          <!-- Node 1: Physics Peaks -->
+          <div class="map-world-node" style="left: 200px; top: 250px;" onclick="loadSubject('physics')">
+            <div class="world-node-circle glow-purple">
+              <i class="fas fa-sun"></i>
+            </div>
+            <div class="world-node-title">Physics Peaks</div>
+          </div>
+
+          <!-- Node 2: Math Mountains -->
+          <div class="map-world-node" style="left: 350px; top: 150px;" onclick="loadSubject('math')">
+            <div class="world-node-circle glow-purple" style="border-color: #3b82f6; color: #3b82f6;">
+              <i class="fas fa-square-root-alt"></i>
+            </div>
+            <div class="world-node-title">Math Mountains</div>
+          </div>
+
+          <!-- Node 3: Chemistry Caves -->
+          <div class="map-world-node" style="left: 450px; top: 200px;" onclick="loadSubject('chemistry')">
+            <div class="world-node-circle glow-pink" style="border-color: var(--quest-pink); color: var(--quest-pink);">
+              <i class="fas fa-flask"></i>
+            </div>
+            <div class="world-node-title">Chemistry Caves</div>
+          </div>
+
+          <!-- Node 4: Biology Jungle (Locked until level 3 / 1500 XP) -->
+          <div class="map-world-node" style="left: 500px; top: 350px;" id="node-biology" onclick="loadSubject('biology', 1500)">
+            <div class="world-node-circle locked">
+              <i class="fas fa-lock"></i>
+            </div>
+            <div class="world-node-title">Biology Jungle <span style="font-size:10px; color:#DC2626;">(1,500 XP)</span></div>
+          </div>
+
+          <!-- Node 5: Tech Valley (Locked until level 4 / 3500 XP) -->
+          <div class="map-world-node" style="left: 650px; top: 250px;" id="node-tech" onclick="loadSubject('tech', 3500)">
+            <div class="world-node-circle locked">
+              <i class="fas fa-lock"></i>
+            </div>
+            <div class="world-node-title">Tech Valley <span style="font-size:10px; color:#DC2626;">(3,500 XP)</span></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/state.js"></script>
+  <script src="../js/db.js"></script>
+  <script src="../js/ui.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      STEMQuestUI.initCommonUI('map');
+      checkMapLocks();
+    });
+
+    function checkMapLocks() {
+      const state = window.STEMQuestState.get();
+      const xp = state.xp;
+
+      // Biology unlock check
+      if (xp >= 1500) {
+        const bio = document.getElementById("node-biology");
+        const circle = bio.querySelector(".world-node-circle");
+        circle.className = "world-node-circle glow-purple";
+        circle.style.borderColor = "#059669";
+        circle.style.color = "#059669";
+        circle.innerHTML = `<i class="fas fa-leaf"></i>`;
+        bio.querySelector(".world-node-title").innerHTML = "Biology Jungle";
+      }
+
+      // Tech unlock check
+      if (xp >= 3500) {
+        const tech = document.getElementById("node-tech");
+        const circle = tech.querySelector(".world-node-circle");
+        circle.className = "world-node-circle glow-purple";
+        circle.style.borderColor = "#06b6d4";
+        circle.style.color = "#06b6d4";
+        circle.innerHTML = `<i class="fas fa-laptop-code"></i>`;
+        tech.querySelector(".world-node-title").innerHTML = "Tech Valley";
+      }
+    }
+
+    function loadSubject(subjectKey, xpReq = 0) {
+      const state = window.STEMQuestState.get();
+      if (state.xp < xpReq) {
+        STEMQuestUI.playAudio('incorrect');
+        alert(`You need ${xpReq} XP to unlock this world! Try completing open quests first.`);
+        return;
+      }
+
+      STEMQuestUI.playAudio('click');
+      window.location.href = `subject-world.html?subject=${subjectKey}`;
+    }
+  </script>
+</body>
+</html>

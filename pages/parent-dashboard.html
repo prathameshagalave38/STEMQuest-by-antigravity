@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STEMQuest - Parent Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/animations.css">
+  <link rel="stylesheet" href="../css/pages.css">
+  <style>
+    .parent-header {
+      background: linear-gradient(135deg, #1E1B4B, #312E81);
+      color: white;
+      padding: 30px;
+      border-radius: var(--border-radius-lg);
+      margin-bottom: 24px;
+    }
+    .custom-bar-chart {
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-end;
+      height: 180px;
+      padding: 10px 0;
+      border-bottom: 2px solid var(--muted-gray);
+      margin: 20px 0;
+    }
+    .chart-bar {
+      width: 24px;
+      background: var(--primary-purple);
+      border-radius: 4px 4px 0 0;
+      text-align: center;
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      min-height: 10px;
+    }
+    .note-card {
+      padding: 20px;
+      border-left: 5px solid var(--primary-purple);
+      background: var(--neutral-light);
+      margin-bottom: 16px;
+      border-radius: 0 var(--border-radius-md) var(--border-radius-md) 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <main class="main-content" style="max-width: 800px;">
+      
+      <!-- Parent Header -->
+      <div class="parent-header anim-slide-up">
+        <div class="flex-row-between">
+          <div>
+            <h1 style="color:white; font-size:32px;">Priya's Report Card</h1>
+            <p style="font-size:14px; opacity:0.8;">Weekly progress updates for Parent/Guardian</p>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="shareWhatsApp()"><i class="fab fa-whatsapp" style="color:#25D366; font-size:16px;"></i> Share Progress</button>
+        </div>
+      </div>
+
+      <!-- Quick Metrics -->
+      <div class="grid-3 anim-slide-up">
+        <div class="glass-card text-center" style="padding: 20px;">
+          <div style="font-size: 32px; color: var(--warning-amber);"><i class="fas fa-fire"></i></div>
+          <h3 style="font-size: 24px; margin-top:5px;" id="val-streak">5 Days</h3>
+          <span style="font-size:12px; color:#6B7280;">Active Daily Streak</span>
+        </div>
+        <div class="glass-card text-center" style="padding: 20px;">
+          <div style="font-size: 32px; color: var(--primary-purple);"><i class="fas fa-history"></i></div>
+          <h3 style="font-size: 24px; margin-top:5px;">3.2 Hours</h3>
+          <span style="font-size:12px; color:#6B7280;">Study Time This Week</span>
+        </div>
+        <div class="glass-card text-center" style="padding: 20px;">
+          <div style="font-size: 32px; color: var(--success-green);"><i class="fas fa-check-circle"></i></div>
+          <h3 style="font-size: 24px; margin-top:5px;">14 Quests</h3>
+          <span style="font-size:12px; color:#6B7280;">Solved Chapters Total</span>
+        </div>
+      </div>
+
+      <!-- Study Hours Graph -->
+      <div class="glass-card anim-slide-up" style="margin-top:24px; padding:24px;">
+        <h3 style="color:var(--neutral-dark);"><i class="fas fa-chart-bar" style="color:var(--quest-pink); margin-right:8px;"></i> Daily Study Duration (Minutes)</h3>
+        
+        <div class="custom-bar-chart" id="bar-chart-container">
+          <div class="chart-bar" style="height: 40px;" title="Mon: 20m">20</div>
+          <div class="chart-bar" style="height: 60px;" title="Tue: 30m">30</div>
+          <div class="chart-bar" style="height: 35px;" title="Wed: 18m">18</div>
+          <div class="chart-bar" style="height: 90px; background: var(--quest-pink);" title="Thu: 45m">45</div>
+          <div class="chart-bar" style="height: 40px;" title="Fri: 20m">20</div>
+          <div class="chart-bar" style="height: 70px;" title="Sat: 35m">35</div>
+          <div class="chart-bar" style="height: 25px;" title="Sun: 12m">12</div>
+        </div>
+        
+        <div class="flex-row-between" style="font-size:12px; font-weight:700; color:#6B7280; padding:0 10px;">
+          <span>Mon</span>
+          <span>Tue</span>
+          <span>Wed</span>
+          <span>Thu</span>
+          <span>Fri</span>
+          <span>Sat</span>
+          <span>Sun</span>
+        </div>
+      </div>
+
+      <!-- Messages/Notes cards -->
+      <div class="glass-card anim-slide-up" style="margin-top:24px; padding:24px;">
+        <h3 style="color:var(--neutral-dark); margin-bottom:20px;"><i class="fas fa-comment-dots" style="color:var(--primary-purple); margin-right:8px;"></i> Teachers & Mentors Feedback</h3>
+        
+        <!-- Mentor Vigyan Note -->
+        <div class="note-card" style="border-color: var(--quest-pink);">
+          <h4 style="font-size: 16px; color: var(--quest-pink);"><i class="fas fa-robot"></i> Vigyan (AI Tutor Companion)</h4>
+          <p style="font-size: 14px; color:#4B5563; margin-top:5px;" id="note-vigyan">
+            Priya excels at visual problem solving! I recommend that she practices 2 more circuit simulation runs this week to lock down current voltage values.
+          </p>
+        </div>
+
+        <!-- Class Teacher Note -->
+        <div class="note-card">
+          <h4 style="font-size: 16px; color: var(--primary-purple);"><i class="fas fa-user-tie"></i> Mrs. Anita Patil (Science Teacher)</h4>
+          <p style="font-size: 14px; color:#4B5563; margin-top:5px;" id="note-teacher">
+            Priya has shown great interest in Biology. She needs a little practice with electrical diagram layouts, but her effort is fantastic!
+          </p>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="../js/state.js"></script>
+  <script src="../js/db.js"></script>
+  <script src="../js/ui.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Hide bottom tabbar for parents view
+      STEMQuestUI.initCommonUI(null);
+      document.querySelector(".app-nav").style.display = "none";
+
+      loadParentData();
+    });
+
+    function loadParentData() {
+      const state = window.STEMQuestState.get();
+      const parentData = window.STEMQuestDB.parentData;
+      
+      // Update values
+      document.getElementById("val-streak").innerText = `${state.streak} Days`;
+      document.getElementById("note-teacher").innerText = parentData.teacherNote;
+      document.getElementById("note-vigyan").innerText = parentData.vigyanNote;
+    }
+
+    function shareWhatsApp() {
+      STEMQuestUI.playAudio('click');
+      const text = encodeURIComponent("Priya has finished 14 STEM lessons this week on STEMQuest! Streak: 5 Days. Try joining our classes!");
+      window.open(`https://api.whatsapp.com/send?text=${text}`);
+    }
+  </script>
+</body>
+</html>

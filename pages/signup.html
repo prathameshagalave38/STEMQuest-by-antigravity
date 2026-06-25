@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STEMQuest - Sign Up</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/animations.css">
+  <link rel="stylesheet" href="../css/pages.css">
+  <style>
+    body {
+      background: radial-gradient(circle at bottom right, rgba(107,33,168,0.1) 0%, rgba(219,39,119,0.05) 50%, rgba(243,244,246,1) 100%);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Auth Panel -->
+  <div class="glass-card auth-container anim-scale-in">
+    <div class="auth-header">
+      <i class="fas fa-graduation-cap" style="font-size: 40px; color: var(--primary-purple); margin-bottom: 10px;"></i>
+      <h2>Create Your Account</h2>
+      <p style="font-size: 14px; color: #6B7280; margin-top: 5px;">Join the STEM Kingdom Adventure!</p>
+    </div>
+
+    <!-- Form Section -->
+    <form id="signup-form" onsubmit="handleSignup(event)">
+      <div class="input-group">
+        <label for="reg-name">Full Name</label>
+        <input type="text" id="reg-name" class="input-field" placeholder="Enter your name" required>
+      </div>
+
+      <div class="input-group">
+        <label for="reg-phone">Phone Number (Parent/Student)</label>
+        <input type="tel" id="reg-phone" class="input-field" placeholder="10-digit mobile number" pattern="[0-9]{10}" required>
+      </div>
+
+      <div class="input-group">
+        <label for="reg-role">I am a...</label>
+        <select id="reg-role" class="input-field" style="background: white;" onchange="roleChanged(this.value)">
+          <option value="student">Student (Class 6 - 12)</option>
+          <option value="parent">Parent</option>
+          <option value="teacher">Teacher</option>
+        </select>
+      </div>
+
+      <div id="pin-setup" style="margin-top: 10px;">
+        <p style="font-family: var(--font-display); font-weight: 600; font-size:14px; margin-bottom: 8px;">Create a 4-Digit Login PIN:</p>
+        <div style="display:flex; gap:10px; justify-content:center;">
+          <input type="password" class="pin-digit" id="p1" maxlength="1" required onkeyup="moveFocus(this, 'p2')">
+          <input type="password" class="pin-digit" id="p2" maxlength="1" required onkeyup="moveFocus(this, 'p3')">
+          <input type="password" class="pin-digit" id="p3" maxlength="1" required onkeyup="moveFocus(this, 'p4')">
+          <input type="password" class="pin-digit" id="p4" maxlength="1" required>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 24px;">Start Adventure</button>
+    </form>
+
+    <div style="text-align: center; margin-top: 20px; font-size: 14px;">
+      Already registered? <a href="login.html" style="color: var(--primary-purple); font-weight: 700;">Login here</a>
+    </div>
+  </div>
+
+  <script src="../js/state.js"></script>
+  <script src="../js/ui.js"></script>
+  <script>
+    function moveFocus(current, nextId) {
+      if (current.value.length >= 1) {
+        document.getElementById(nextId).focus();
+      }
+    }
+
+    function roleChanged(val) {
+      const pinDiv = document.getElementById("pin-setup");
+      if (val === "student") {
+        pinDiv.style.display = "block";
+        document.querySelectorAll(".pin-digit").forEach(p => p.required = true);
+      } else {
+        pinDiv.style.display = "none";
+        document.querySelectorAll(".pin-digit").forEach(p => p.required = false);
+      }
+    }
+
+    function handleSignup(e) {
+      e.preventDefault();
+      STEMQuestUI.playAudio('correct');
+
+      const name = document.getElementById("reg-name").value;
+      const phone = document.getElementById("reg-phone").value;
+      const role = document.getElementById("reg-role").value;
+
+      if (role === "student") {
+        // Reset state & setup name
+        window.STEMQuestState.reset();
+        window.STEMQuestState.updateUser({
+          name: name,
+          phone: phone,
+          role: "student"
+        });
+        
+        setTimeout(() => {
+          window.location.href = "language.html";
+        }, 400);
+      } else {
+        // Parent or Teacher redirect directly
+        setTimeout(() => {
+          if (role === "teacher") {
+            window.location.href = "teacher-dashboard.html";
+          } else {
+            window.location.href = "parent-dashboard.html";
+          }
+        }, 400);
+      }
+    }
+  </script>
+</body>
+</html>

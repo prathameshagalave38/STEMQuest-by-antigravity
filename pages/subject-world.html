@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STEMQuest - Subject Chapters</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/animations.css">
+  <link rel="stylesheet" href="../css/pages.css">
+  <style>
+    .subject-banner {
+      border-radius: var(--border-radius-lg);
+      padding: 30px;
+      color: white;
+      margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .subject-banner.physics { background: linear-gradient(135deg, #6B21A8, #8B5CF6); }
+    .subject-banner.chemistry { background: linear-gradient(135deg, #DB2777, #EC4899); }
+    .subject-banner.math { background: linear-gradient(135deg, #2563EB, #3B82F6); }
+    .subject-banner.biology { background: linear-gradient(135deg, #059669, #10B981); }
+    .subject-banner.tech { background: linear-gradient(135deg, #0891B2, #06B6D4); }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <main class="main-content">
+      <div style="margin-bottom: 15px;">
+        <button class="btn btn-secondary btn-sm" onclick="window.location.href='quest-map.html'"><i class="fas fa-arrow-left"></i> Back to Map</button>
+      </div>
+
+      <!-- Subject Details Header -->
+      <div class="subject-banner anim-slide-up" id="sub-banner">
+        <h1 id="sub-name">Subject World</h1>
+        <p style="font-size: 16px; opacity: 0.9;" id="sub-tagline">Loading subject details...</p>
+      </div>
+
+      <!-- Chapters List -->
+      <h3 class="anim-slide-up" style="margin-bottom: 15px; color: var(--neutral-dark);">Mission Chapters</h3>
+      <div class="flex-column anim-slide-up" id="chapters-list-container" style="gap: 16px;">
+        <!-- Dynamically populated -->
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/state.js"></script>
+  <script src="../js/db.js"></script>
+  <script src="../js/ui.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      STEMQuestUI.initCommonUI('map');
+      renderChapters();
+    });
+
+    function renderChapters() {
+      const params = new URLSearchParams(window.location.search);
+      const subKey = params.get("subject") || "physics";
+
+      const subject = window.STEMQuestDB.subjects[subKey];
+      if (!subject) return;
+
+      // Update banner
+      const banner = document.getElementById("sub-banner");
+      banner.className = `subject-banner ${subKey}`;
+      document.getElementById("sub-name").innerText = subject.name;
+      document.getElementById("sub-tagline").innerText = subject.tagline;
+
+      // Chapters filters
+      const state = window.STEMQuestState.get();
+      const chapters = window.STEMQuestDB.chapters.filter(ch => ch.subject === subKey);
+      const container = document.getElementById("chapters-list-container");
+
+      if (chapters.length === 0) {
+        container.innerHTML = `<p style="text-align:center; padding: 40px; color:#6B7280;">More chapters for Class ${state.user.classSelected} coming soon in Phase 2!</p>`;
+        return;
+      }
+
+      container.innerHTML = chapters.map(ch => {
+        const isUnlocked = state.xp >= ch.xpRequired;
+        const starRating = getChapterStars(ch.id, state);
+
+        if (isUnlocked) {
+          return `
+            <div class="quest-card" onclick="enterChapter('${ch.id}')" style="cursor:pointer;">
+              <div class="quest-card-badge" style="background: rgba(5,150,105,0.1); color: var(--success-green);">Unlocked</div>
+              <h3 style="font-size: 20px; color: var(--neutral-dark);"><i class="fas ${subject.icon}" style="margin-right: 8px;"></i> ${ch.name}</h3>
+              <p style="font-size: 14px; color:#4B5563;">${ch.desc}</p>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 10px;">
+                <span style="font-size:12px; color:#6B7280;">Includes ${ch.quests.length} Quest tasks</span>
+                <div style="color: #FBBF24;">
+                  ${Array.from({ length: 3 }, (_, i) => `<i class="${i < starRating ? 'fas' : 'far'} fa-star"></i>`).join("")}
+                </div>
+              </div>
+            </div>
+          `;
+        } else {
+          return `
+            <div class="quest-card locked">
+              <div class="quest-card-badge" style="background: rgba(220,38,38,0.1); color: var(--danger-red);"><i class="fas fa-lock"></i> Locked</div>
+              <h3 style="font-size: 20px; color: #9CA3AF;"><i class="fas ${subject.icon}" style="margin-right: 8px;"></i> ${ch.name}</h3>
+              <p style="font-size: 14px; color:#9CA3AF;">${ch.desc}</p>
+              <p style="font-size: 13px; font-weight:700; color:var(--danger-red); margin-top: 10px;">
+                Requires ${ch.xpRequired} XP to unlock
+              </p>
+            </div>
+          `;
+        }
+      }).join("");
+    }
+
+    function getChapterStars(chId, state) {
+      const chapter = window.STEMQuestDB.chapters.find(c => c.id === chId);
+      if (!chapter) return 0;
+      let completedCount = 0;
+      chapter.quests.forEach(qId => {
+        if (state.completedQuests.includes(qId)) completedCount++;
+      });
+      if (completedCount === 0) return 0;
+      if (completedCount === chapter.quests.length) return 3;
+      return 1;
+    }
+
+    function enterChapter(chId) {
+      STEMQuestUI.playAudio('click');
+      window.location.href = `chapter.html?id=${chId}`;
+    }
+  </script>
+</body>
+</html>

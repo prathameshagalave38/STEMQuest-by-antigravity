@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STEMQuest - Vigyan AI Tutor</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/animations.css">
+  <link rel="stylesheet" href="../css/pages.css">
+  <style>
+    /* Chat specific resets */
+    body {
+      background: #F3F4F6;
+    }
+    .typing-dot {
+      width: 6px;
+      height: 6px;
+      background: #9CA3AF;
+      border-radius: 50%;
+      display: inline-block;
+      animation: float 1s infinite alternate;
+    }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <main class="main-content" style="max-width:700px; padding-bottom: 20px;">
+      
+      <div class="chat-container">
+        <!-- Header -->
+        <div class="chat-header">
+          <div class="chat-avatar"><i class="fas fa-robot"></i></div>
+          <div>
+            <h3 style="color:white; font-size:18px;">Vigyan AI Tutor</h3>
+            <span style="font-size:11px; opacity:0.8;"><i class="fas fa-circle" style="color:#10B981; font-size:8px; margin-right:4px;"></i> Active • Answers in Local Languages</span>
+          </div>
+        </div>
+
+        <!-- Messages Listing -->
+        <div class="chat-messages" id="chat-messages-box">
+          <div class="chat-bubble mentor">
+            Namaste! I am <strong>Vigyan</strong>, your STEM companion. Ask me any question, explain a doubt, or tap a chip below to start!
+          </div>
+        </div>
+
+        <!-- Suggestion Chips -->
+        <div class="chat-chips" id="suggestion-chips-container">
+          <div class="suggestion-chip" onclick="sendSuggestion('Explain Electricity in Marathi')">Electricity in Marathi</div>
+          <div class="suggestion-chip" onclick="sendSuggestion('Give me a Math puzzle')">Math Puzzle</div>
+          <div class="suggestion-chip" onclick="sendSuggestion('How to build a circuit?')">Build a Circuit</div>
+          <div class="suggestion-chip" onclick="sendSuggestion('Explain pH scaling')">What is pH?</div>
+        </div>
+
+        <!-- Input Bar -->
+        <div class="chat-input-bar">
+          <button class="voice-record-btn" id="voice-btn" onclick="toggleVoiceRecord()"><i class="fas fa-microphone"></i></button>
+          <input type="text" class="chat-text-input" id="chat-input-field" placeholder="Ask a doubt..." onkeydown="handleInputKey(event)">
+          <button class="btn btn-primary btn-sm" style="border-radius: 50%; width: 44px; height: 44px; padding:0;" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="../js/state.js"></script>
+  <script src="../js/ui.js"></script>
+  <script>
+    let isRecording = false;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      // Initialize layout - hide common topbar/nav for dedicated immersive chat UI
+      STEMQuestUI.initCommonUI(null);
+      document.querySelector(".app-topbar").style.display = "none";
+      document.querySelector(".app-nav").style.display = "none";
+    });
+
+    function handleInputKey(e) {
+      if (e.key === "Enter") {
+        sendMessage();
+      }
+    }
+
+    function sendSuggestion(text) {
+      document.getElementById("chat-input-field").value = text;
+      sendMessage();
+    }
+
+    function toggleVoiceRecord() {
+      const btn = document.getElementById("voice-btn");
+      isRecording = !isRecording;
+
+      if (isRecording) {
+        STEMQuestUI.playAudio('click');
+        btn.classList.add("recording");
+        btn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i>`;
+        
+        // Simulate speech recognition typing after 2 seconds
+        setTimeout(() => {
+          if (isRecording) {
+            document.getElementById("chat-input-field").value = "Explain equivalent fractions";
+            toggleVoiceRecord(); // stop recording
+            sendMessage();
+          }
+        }, 2200);
+      } else {
+        btn.classList.remove("recording");
+        btn.innerHTML = `<i class="fas fa-microphone"></i>`;
+      }
+    }
+
+    function sendMessage() {
+      const input = document.getElementById("chat-input-field");
+      const text = input.value.trim();
+      if (!text) return;
+
+      STEMQuestUI.playAudio('click');
+      
+      // Render Student Bubble
+      appendMessage(text, 'student');
+      input.value = "";
+
+      // Show Typing Indicator
+      showTypingIndicator();
+
+      // Trigger Mock AI reply
+      setTimeout(() => {
+        removeTypingIndicator();
+        generateReply(text);
+      }, 1500);
+    }
+
+    function appendMessage(text, sender) {
+      const box = document.getElementById("chat-messages-box");
+      const bubble = document.createElement("div");
+      bubble.className = `chat-bubble ${sender}`;
+      bubble.innerHTML = text;
+
+      // Add Speak aloud icon for mentor bubbles
+      if (sender === 'mentor') {
+        const speakBtn = document.createElement("i");
+        speakBtn.className = "fas fa-volume-up";
+        speakBtn.style = "position:absolute; right: -25px; top: 12px; color:var(--primary-purple); cursor:pointer;";
+        speakBtn.onclick = () => {
+          if ('speechSynthesis' in window) {
+            // Strip tags
+            const rawText = bubble.innerText;
+            const utterance = new SpeechSynthesisUtterance(rawText);
+            utterance.rate = 0.95;
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.speak(utterance);
+          }
+        };
+        bubble.appendChild(speakBtn);
+      }
+
+      box.appendChild(bubble);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function showTypingIndicator() {
+      const box = document.getElementById("chat-messages-box");
+      const indicator = document.createElement("div");
+      indicator.className = "chat-bubble mentor";
+      indicator.id = "typing-indicator";
+      indicator.innerHTML = `
+        <div class="typing-dot"></div>
+        <div class="typing-dot" style="margin: 0 4px;"></div>
+        <div class="typing-dot"></div>
+      `;
+      box.appendChild(indicator);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function removeTypingIndicator() {
+      const ind = document.getElementById("typing-indicator");
+      if (ind) ind.remove();
+    }
+
+    function generateReply(prompt) {
+      let reply = "I'm looking into that! Can you explain your question further? Let's check with standard textbooks.";
+      const query = prompt.toLowerCase();
+
+      if (query.includes("electricity") && query.includes("marathi")) {
+        reply = "विद्युत (Electricity) म्हणजे इलेक्ट्रॉनचा प्रवाह. जेव्हा आपण बॅटरी जोडतो, तेव्हा इलेक्ट्रॉन एका दिशेने वाहू लागतात. यामुळे बल्ब पेटतो. तांब्याची तार (copper wire) विजेचा वाहक (conductor) आहे.";
+      } 
+      else if (query.includes("puzzle") || query.includes("teaser")) {
+        reply = "Here is a quick puzzle: A village baker has 1 loaf of bread. If they divide it equally among 4 families, what fraction does each family get? <br><br><strong>Answer: 1/4 (One-fourth)</strong>";
+      } 
+      else if (query.includes("circuit")) {
+        reply = "To build a complete circuit loops, you need:<br>1. <strong>Power source:</strong> A battery.<br>2. <strong>Conductive wire:</strong> To let charge flow.<br>3. <strong>Load:</strong> A lightbulb to show electricity flows.<br>Toggle the switch closed to make sure there are no breaks!";
+      } 
+      else if (query.includes("ph")) {
+        reply = "The pH scale ranges from 1 to 14. <br>• <strong>pH < 7:</strong> Acidic (like lemon juice)<br>• <strong>pH = 7:</strong> Neutral (pure water)<br>• <strong>pH > 7:</strong> Basic (soap water)<br>Mixing acids and bases creates salt and water (neutralization)!";
+      }
+      else if (query.includes("fraction")) {
+        reply = "Fractions represent parts of a whole pizza or bread. 1/2 means one part out of two equal halves. The top number is the <strong>Numerator</strong>, and the bottom is the <strong>Denominator</strong>.";
+      }
+
+      STEMQuestUI.playAudio('correct');
+      appendMessage(reply, 'mentor');
+    }
+  </script>
+</body>
+</html>

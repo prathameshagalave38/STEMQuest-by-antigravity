@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STEMQuest - Student Profile</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/animations.css">
+  <link rel="stylesheet" href="../css/pages.css">
+  <style>
+    .profile-avatar-card {
+      text-align: center;
+      padding: 30px;
+    }
+    .profile-avatar-frame {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--lavender-fill) 0%, rgba(255,255,255,0.4) 100%);
+      border: 3px solid var(--primary-purple);
+      margin: 0 auto 16px auto;
+      overflow: hidden;
+      box-shadow: var(--card-shadow);
+    }
+    .stat-box {
+      text-align: center;
+      padding: 16px;
+      background: var(--neutral-light);
+      border-radius: var(--border-radius-sm);
+      border: 1px solid var(--muted-gray);
+    }
+    .stat-box h4 {
+      font-size: 22px;
+      color: var(--primary-purple);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <main class="main-content">
+      
+      <!-- Top profile details -->
+      <div class="grid-2 anim-slide-up">
+        <!-- Avatar card -->
+        <div class="glass-card profile-avatar-card">
+          <div class="profile-avatar-frame" id="profile-avatar-box"></div>
+          <h2 id="profile-name">Priya Rao</h2>
+          <span class="stat-chip" style="margin-top: 10px; display:inline-flex;" id="profile-rank">STEM Explorer</span>
+          <br><br>
+          <button class="btn btn-secondary btn-sm" onclick="window.location.href='avatar-builder.html'">
+            <i class="fas fa-edit"></i> Redesign Avatar
+          </button>
+        </div>
+
+        <!-- Progress stats -->
+        <div class="glass-card" style="padding: 24px;">
+          <h3 style="margin-bottom:16px; color:var(--neutral-dark);"><i class="fas fa-chart-line" style="color:var(--quest-pink); margin-right:6px;"></i> Learning Progress</h3>
+          <div class="grid-2" style="gap:14px;">
+            <div class="stat-box">
+              <h4 id="stat-level">Lvl 8</h4>
+              <span style="font-size:12px; color:#6B7280;">Current Level</span>
+            </div>
+            <div class="stat-box">
+              <h4 id="stat-xp">2,150</h4>
+              <span style="font-size:12px; color:#6B7280;">Total XP</span>
+            </div>
+            <div class="stat-box">
+              <h4 id="stat-quests">2 Done</h4>
+              <span style="font-size:12px; color:#6B7280;">Quests Solved</span>
+            </div>
+            <div class="stat-box">
+              <h4 id="stat-coins">120</h4>
+              <span style="font-size:12px; color:#6B7280;">STEM Coins</span>
+            </div>
+          </div>
+          
+          <div style="margin-top: 24px; text-align:center;">
+            <button class="btn btn-outline btn-sm" style="color:var(--danger-red); border-color:var(--danger-red);" onclick="handleLogout()">
+              <i class="fas fa-sign-out-alt"></i> Reset Session / Logout
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Skills Concept Tree -->
+      <div class="glass-card anim-slide-up" style="margin-top: 24px;">
+        <h3 style="color:var(--neutral-dark); margin-bottom:10px;"><i class="fas fa-sitemap" style="color:var(--primary-purple); margin-right:8px;"></i> Concept Skill Tree</h3>
+        <p style="font-size: 13px; color:#6B7280; margin-bottom: 20px;">Review the conceptual nodes you have successfully unlocked during your missions.</p>
+        
+        <div class="skills-tree-container" id="tree-container">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="../js/state.js"></script>
+  <script src="../js/db.js"></script>
+  <script src="../js/ui.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      STEMQuestUI.initCommonUI('galaxy');
+      loadProfileData();
+      renderSkillTree();
+    });
+
+    function loadProfileData() {
+      const state = window.STEMQuestState.get();
+      if (!state.user.name) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      document.getElementById("profile-name").innerText = state.user.name;
+      document.getElementById("profile-rank").innerText = `Rank: ${state.rank}`;
+      document.getElementById("profile-avatar-box").innerHTML = STEMQuestUI.getAvatarSVG(state.user.avatar);
+
+      document.getElementById("stat-level").innerText = `Lvl ${state.level}`;
+      document.getElementById("stat-xp").innerText = `${state.xp} XP`;
+      document.getElementById("stat-quests").innerText = `${state.completedQuests.length} Quests`;
+      document.getElementById("stat-coins").innerText = `${state.coins}`;
+    }
+
+    function renderSkillTree() {
+      const state = window.STEMQuestState.get();
+      const container = document.getElementById("tree-container");
+
+      // Define standard skill tree layers
+      const nodes = [
+        { id: "s1", name: "Circuit Loops", icon: "fa-circle-notch", unlocked: state.completedQuests.includes("phys_q1"), details: "Path of electrons loop circuits." },
+        { id: "s2", name: "Numerator", icon: "fa-percentage", unlocked: state.completedQuests.includes("math_q1"), details: "Number representing active fraction segments." },
+        { id: "s3", name: "Resistance", icon: "fa-ban", unlocked: state.completedQuests.includes("phys_q2"), details: "Material limits electron flows." },
+        { id: "s4", name: "pH Solutions", icon: "fa-tint", unlocked: state.completedQuests.includes("chem_q1"), details: "Scale measuring acidic neutral base indicators." }
+      ];
+
+      container.innerHTML = `
+        <div class="skill-row">
+          <div class="skill-node ${nodes[0].unlocked ? 'learned' : ''}" onclick="showSkillInfo('${nodes[0].name}', '${nodes[0].details}', ${nodes[0].unlocked})">
+            <i class="fas ${nodes[0].icon}"></i>
+            <div class="skill-node-title">${nodes[0].name}</div>
+          </div>
+          <div class="skill-node ${nodes[1].unlocked ? 'learned' : ''}" onclick="showSkillInfo('${nodes[1].name}', '${nodes[1].details}', ${nodes[1].unlocked})">
+            <i class="fas ${nodes[1].icon}"></i>
+            <div class="skill-node-title">${nodes[1].name}</div>
+          </div>
+        </div>
+
+        <div style="width:2px; height:40px; background:var(--muted-gray); margin:-10px 0;"></div>
+
+        <div class="skill-row">
+          <div class="skill-node ${nodes[2].unlocked ? 'learned' : ''}" onclick="showSkillInfo('${nodes[2].name}', '${nodes[2].details}', ${nodes[2].unlocked})">
+            <i class="fas ${nodes[2].icon}"></i>
+            <div class="skill-node-title">${nodes[2].name}</div>
+          </div>
+          <div class="skill-node ${nodes[3].unlocked ? 'learned' : ''}" onclick="showSkillInfo('${nodes[3].name}', '${nodes[3].details}', ${nodes[3].unlocked})">
+            <i class="fas ${nodes[3].icon}"></i>
+            <div class="skill-node-title">${nodes[3].name}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function showSkillInfo(name, details, unlocked) {
+      STEMQuestUI.playAudio('click');
+      const overlay = document.getElementById("stemquest-modal-overlay");
+      const content = document.getElementById("stemquest-modal-content");
+      if (overlay && content) {
+        content.innerHTML = `
+          <h2>${name}</h2>
+          <span style="font-size:12px; font-weight:700; color:${unlocked ? 'var(--success-green)' : '#6B7280'}; text-transform:uppercase; display:block; margin: 5px 0 15px 0;">
+            Status: ${unlocked ? 'Mastered' : 'Locked'}
+          </span>
+          <p style="font-size:15px; color:#4B5563; margin-bottom:24px;">
+            ${details}
+          </p>
+          <button class="btn btn-primary" onclick="STEMQuestUI.closeModal()">Close Info</button>
+        `;
+        overlay.style.display = "flex";
+      }
+    }
+
+    function handleLogout() {
+      STEMQuestUI.playAudio('click');
+      if (confirm("This will erase all gameplay data from this browser session. Continue?")) {
+        window.STEMQuestState.reset();
+      }
+    }
+  </script>
+</body>
+</html>

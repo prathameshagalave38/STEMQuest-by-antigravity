@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STEMQuest - Badge Cabinet</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/animations.css">
+  <link rel="stylesheet" href="../css/pages.css">
+  <style>
+    .badges-container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .badge-card {
+      text-align: center;
+      padding: 24px;
+      background: white;
+      border: 2px solid var(--muted-gray);
+      border-radius: var(--border-radius-md);
+      transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      cursor: pointer;
+    }
+    .badge-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--quest-pink);
+    }
+    .badge-icon-box {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: var(--neutral-light);
+      color: #9CA3AF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 15px auto;
+      font-size: 30px;
+      border: 2px solid var(--muted-gray);
+      transition: all 0.3s ease;
+    }
+    .badge-card.unlocked .badge-icon-box {
+      background: rgba(219,39,119,0.15);
+      color: var(--quest-pink);
+      border-color: var(--quest-pink);
+      box-shadow: 0 0 15px rgba(219,39,119,0.2);
+    }
+    .badge-label {
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 700;
+      color: #9CA3AF;
+    }
+    .badge-card.unlocked .badge-label {
+      color: var(--neutral-dark);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <main class="main-content">
+      <div class="badges-container">
+        
+        <!-- Header -->
+        <div style="text-align:center; margin-bottom: 30px;" class="anim-slide-up">
+          <h2>🏆 Achievement Badges</h2>
+          <p style="font-size: 14px; color:#4B5563;">Earn badges for consistency, lab investigations, and duels.</p>
+        </div>
+
+        <!-- Badges Grid -->
+        <div class="grid-3 anim-scale-in" id="badge-cabinet-grid">
+          <!-- Populated by JS -->
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/state.js"></script>
+  <script src="../js/db.js"></script>
+  <script src="../js/ui.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      STEMQuestUI.initCommonUI('galaxy');
+      renderBadges();
+    });
+
+    function renderBadges() {
+      const state = window.STEMQuestState.get();
+      const allBadges = window.STEMQuestDB.badges;
+      const container = document.getElementById("badge-cabinet-grid");
+
+      container.innerHTML = allBadges.map(badge => {
+        const isUnlocked = state.badgeCollection.includes(badge.id);
+        const cardClass = isUnlocked ? 'unlocked' : '';
+        const lockIcon = isUnlocked ? '' : ' <i class="fas fa-lock" style="font-size:11px; margin-left:4px; color:#9CA3AF;"></i>';
+
+        return `
+          <div class="badge-card ${cardClass}" onclick="triggerBadgeDetails('${badge.id}', ${isUnlocked})">
+            <div class="badge-icon-box">
+              <i class="fas ${badge.icon}"></i>
+            </div>
+            <h4 class="badge-label">${badge.name}${lockIcon}</h4>
+            <span style="font-size: 11px; color:#9CA3AF; text-transform:uppercase; font-weight:700;">${badge.category}</span>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function triggerBadgeDetails(badgeId, isUnlocked) {
+      STEMQuestUI.playAudio('click');
+      const badge = window.STEMQuestDB.badges.find(b => b.id === badgeId);
+      if (!badge) return;
+
+      const overlay = document.getElementById("stemquest-modal-overlay");
+      const content = document.getElementById("stemquest-modal-content");
+      if (overlay && content) {
+        content.innerHTML = `
+          <div style="width:70px; height:70px; border-radius:50%; background:${isUnlocked ? 'rgba(219,39,119,0.15)' : 'var(--neutral-light)'}; color:${isUnlocked ? 'var(--quest-pink)' : '#9CA3AF'}; border:2px solid ${isUnlocked ? 'var(--quest-pink)' : 'var(--muted-gray)'}; display:flex; align-items:center; justify-content:center; font-size:30px; margin: 0 auto 20px auto;">
+            <i class="fas ${badge.icon}"></i>
+          </div>
+          <h2>${badge.name}</h2>
+          <span style="font-size:11px; font-weight:700; color:var(--primary-purple); text-transform:uppercase; display:block; margin: 8px 0 15px 0;">Category: ${badge.category}</span>
+          <p style="font-size:15px; color:#4B5563; max-width:320px; margin: 0 auto 24px auto;">
+            "${badge.desc}"
+          </p>
+          <p style="font-size:13px; font-weight:600; color:${isUnlocked ? 'var(--success-green)' : 'var(--danger-red)'}; margin-bottom:20px;">
+            ${isUnlocked ? '<i class="fas fa-check-circle"></i> Unlocked & 100 XP Claimed' : '<i class="fas fa-exclamation-circle"></i> Complete criteria to unlock!'}
+          </p>
+          <button class="btn btn-primary" onclick="STEMQuestUI.closeModal()">Close Cabinet</button>
+        `;
+        overlay.style.display = "flex";
+      }
+    }
+  </script>
+</body>
+</html>

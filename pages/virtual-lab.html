@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STEMQuest - Virtual STEM Lab</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/animations.css">
+  <link rel="stylesheet" href="../css/pages.css">
+  <style>
+    .beaker-liquid {
+      width: 100px;
+      height: 100px;
+      background: var(--muted-gray);
+      margin: 20px auto;
+      border: 4px solid var(--neutral-dark);
+      border-top: none;
+      border-radius: 0 0 16px 16px;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.3s ease;
+    }
+    .liquid-fill {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 60%;
+      background: rgba(107,33,168,0.3);
+      transition: all 0.3s ease;
+    }
+    .lab-indicator {
+      padding: 10px;
+      border-radius: var(--border-radius-sm);
+      text-align: center;
+      font-weight: 700;
+      margin-top: 10px;
+    }
+    .grid-math-canvas {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      grid-template-rows: repeat(10, 1fr);
+      width: 300px;
+      height: 300px;
+      border: 2px solid var(--neutral-dark);
+      margin: 0 auto;
+      background-image: radial-gradient(var(--muted-gray) 1.5px, transparent 1.5px);
+      background-size: 30px 30px;
+      position: relative;
+    }
+    .math-point {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--primary-purple);
+      cursor: pointer;
+      position: absolute;
+      transform: translate(-50%, -50%);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <main class="main-content">
+      <div class="flex-row-between anim-slide-up" style="margin-bottom: 20px;">
+        <div>
+          <h2>Virtual STEM Workbench</h2>
+          <p style="font-size: 14px; color: #4B5563;">Perform interactive sandbox experiments and verify parameters.</p>
+        </div>
+      </div>
+
+      <!-- Lab subject selections -->
+      <div class="avatar-customizer-tabs anim-slide-up">
+        <div class="customizer-tab active" onclick="loadLabType('physics', this)">Physics (Circuits)</div>
+        <div class="customizer-tab" onclick="loadLabType('chemistry', this)">Chemistry (pH Indicator)</div>
+        <div class="customizer-tab" onclick="loadLabType('biology', this)">Biology (Microscope)</div>
+        <div class="customizer-tab" onclick="loadLabType('math', this)">Mathematics (Coordinates)</div>
+      </div>
+
+      <!-- Main Layout -->
+      <div class="lab-layout anim-scale-in">
+        <!-- Apparatus Tray -->
+        <div class="lab-tray" id="apparatus-tray">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Workbench Canvas -->
+        <div class="lab-workbench flex-row-center" id="workbench-canvas">
+          <!-- Rendering Simulator -->
+        </div>
+      </div>
+
+      <!-- Bottom action bar -->
+      <div class="flex-row-between anim-slide-up" style="margin-top: 24px;">
+        <button class="btn btn-secondary" onclick="resetExperiment()"><i class="fas fa-undo"></i> Reset Board</button>
+        <button class="btn btn-success" onclick="verifyExperiment()"><i class="fas fa-check-circle"></i> Log Experiment Output</button>
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/state.js"></script>
+  <script src="../js/db.js"></script>
+  <script src="../js/ui.js"></script>
+  <script>
+    let activeLab = 'physics';
+    
+    // Physics states
+    let isBatteryConnected = false;
+    let isBulbConnected = false;
+    let isSwitchClosed = false;
+
+    // Chemistry states
+    let currentPH = 7;
+    let litmusColor = '#9CA3AF';
+
+    // Biology states
+    let magPower = 1;
+
+    // Math states
+    let points = [
+      { x: 3, y: 4, label: 'A' },
+      { x: 7, y: 2, label: 'B' }
+    ];
+
+    document.addEventListener("DOMContentLoaded", () => {
+      STEMQuestUI.initCommonUI('lab');
+      loadExperiment();
+    });
+
+    function loadLabType(type, el) {
+      STEMQuestUI.playAudio('click');
+      activeLab = type;
+      
+      document.querySelectorAll(".customizer-tab").forEach(tab => tab.classList.remove("active"));
+      el.classList.add("active");
+
+      loadExperiment();
+    }
+
+    function loadExperiment() {
+      const tray = document.getElementById("apparatus-tray");
+      const canvas = document.getElementById("workbench-canvas");
+
+      if (activeLab === 'physics') {
+        // Render Physics Tray
+        tray.innerHTML = `
+          <div class="lab-tray-item" onclick="toggleCircuitPart('battery')"><i class="fas fa-battery-full"></i> Connect Battery</div>
+          <div class="lab-tray-item" onclick="toggleCircuitPart('bulb')"><i class="fas fa-lightbulb"></i> Connect Bulb</div>
+          <div class="lab-tray-item" onclick="toggleCircuitPart('switch')"><i class="fas fa-toggle-on"></i> Toggle Switch</div>
+        `;
+        renderPhysicsCanvas();
+      }
+      else if (activeLab === 'chemistry') {
+        tray.innerHTML = `
+          <div class="lab-tray-item" onclick="addChemical(-1)"><i class="fas fa-plus-circle" style="color:var(--danger-red);"></i> Add Acid (pH-)</div>
+          <div class="lab-tray-item" onclick="addChemical(1)"><i class="fas fa-plus-circle" style="color:#3b82f6;"></i> Add Base (pH+)</div>
+          <div class="lab-tray-item" onclick="dipLitmus()"><i class="fas fa-vial"></i> Dip Litmus Paper</div>
+        `;
+        renderChemistryCanvas();
+      }
+      else if (activeLab === 'biology') {
+        tray.innerHTML = `
+          <div class="lab-tray-item" onclick="zoomLens(100)"><i class="fas fa-search-plus"></i> Zoom 100x</div>
+          <div class="lab-tray-item" onclick="zoomLens(400)"><i class="fas fa-search-plus"></i> Zoom 400x</div>
+          <div class="lab-tray-item" onclick="zoomLens(1000)"><i class="fas fa-search-plus"></i> Zoom 1000x</div>
+        `;
+        renderBiologyCanvas();
+      }
+      else if (activeLab === 'math') {
+        tray.innerHTML = `
+          <p style="font-size:12px; font-weight:700; color:var(--primary-purple);">Instructions:</p>
+          <p style="font-size:11px; color:#4B5563;">Tap points to display linear coordinates.</p>
+        `;
+        renderMathCanvas();
+      }
+    }
+
+    function resetExperiment() {
+      STEMQuestUI.playAudio('click');
+      isBatteryConnected = false;
+      isBulbConnected = false;
+      isSwitchClosed = false;
+      currentPH = 7;
+      litmusColor = '#9CA3AF';
+      magPower = 1;
+      loadExperiment();
+    }
+
+    // Physics Engine Sandbox
+    function renderPhysicsCanvas() {
+      const canvas = document.getElementById("workbench-canvas");
+      let glowStyle = (isBatteryConnected && isBulbConnected && isSwitchClosed) ? 'color:#f59e0b; text-shadow:0 0 40px #fbbf24;' : 'color:#9ca3af;';
+      
+      canvas.innerHTML = `
+        <div class="flex-column" style="align-items:center; gap:20px; width:100%;">
+          <div style="font-size: 70px; transition: all 0.3s ease; ${glowStyle}" id="bulb-element">
+            <i class="fas fa-lightbulb"></i>
+          </div>
+          
+          <div class="flex-row-between" style="gap:50px; border:3px solid var(--neutral-dark); border-radius:10px; padding:20px; background:white;">
+            <div style="text-align:center;">
+              <div style="font-size:32px; color:${isBatteryConnected ? 'var(--success-green)' : '#9ca3af'}"><i class="fas fa-battery-three-quarters"></i></div>
+              <span style="font-size:11px; font-weight:700;">Battery</span>
+            </div>
+            
+            <div style="text-align:center; cursor:pointer;" onclick="toggleCircuitPart('switch')">
+              <div style="font-size:32px; color:${isSwitchClosed ? 'var(--success-green)' : '#9ca3af'}">
+                <i class="fas ${isSwitchClosed ? 'fa-toggle-on' : 'fa-toggle-off'}"></i>
+              </div>
+              <span style="font-size:11px; font-weight:700;">Switch: ${isSwitchClosed ? 'CLOSED' : 'OPEN'}</span>
+            </div>
+          </div>
+
+          <p style="font-size:13px; font-weight:600; color:#4B5563;" id="physics-status">
+            ${(isBatteryConnected && isBulbConnected && isSwitchClosed) ? '💡 Loop Complete! Electricity is flowing.' : '❌ Circuit broken. Connect loop nodes.'}
+          </p>
+        </div>
+      `;
+    }
+
+    function toggleCircuitPart(part) {
+      STEMQuestUI.playAudio('click');
+      if (part === 'battery') isBatteryConnected = !isBatteryConnected;
+      if (part === 'bulb') isBulbConnected = !isBulbConnected;
+      if (part === 'switch') {
+        isSwitchClosed = !isSwitchClosed;
+        if (isSwitchClosed && isBatteryConnected && isBulbConnected) {
+          STEMQuestUI.playAudio('correct');
+        }
+      }
+      renderPhysicsCanvas();
+    }
+
+    // Chemistry Engine Sandbox
+    function renderChemistryCanvas() {
+      const canvas = document.getElementById("workbench-canvas");
+      
+      // Determine liquid color based on pH
+      let r = 239, g = 68, b = 68; // acid (pH 2)
+      if (currentPH >= 7) {
+        // Blend neutral (107, 33, 168) to alkaline (59, 130, 246)
+        const factor = (currentPH - 7) / 7;
+        r = Math.floor(107 + (59 - 107) * factor);
+        g = Math.floor(33 + (130 - 33) * factor);
+        b = Math.floor(168 + (246 - 168) * factor);
+      } else {
+        // Blend acidic (239, 68, 68) to neutral
+        const factor = currentPH / 7;
+        r = Math.floor(239 + (107 - 239) * factor);
+        g = Math.floor(68 + (33 - 68) * factor);
+        b = Math.floor(68 + (168 - 68) * factor);
+      }
+
+      canvas.innerHTML = `
+        <div class="flex-column" style="align-items:center; width:100%;">
+          <div class="beaker-liquid">
+            <div class="liquid-fill" style="background: rgba(${r}, ${g}, ${b}, 0.7); height: 75%;"></div>
+          </div>
+          
+          <div class="lab-indicator" style="background: rgba(${r}, ${g}, ${b}, 0.15); color: rgb(${r}, ${g}, ${b});">
+            Solution pH Level: ${currentPH}
+          </div>
+
+          <div style="display:flex; align-items:center; gap:10px; margin-top:20px;">
+            <div style="width: 15px; height: 60px; background: ${litmusColor}; border-radius:3px; border:1px solid #6B7280;"></div>
+            <span style="font-size:12px; font-weight:700;">Indicator Litmus Paper Strip</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function addChemical(direction) {
+      STEMQuestUI.playAudio('click');
+      currentPH = Math.max(1, Math.min(14, currentPH + direction));
+      renderChemistryCanvas();
+    }
+
+    function dipLitmus() {
+      STEMQuestUI.playAudio('correct');
+      // Litmus turns red for acid (<7), blue for alkaline (>7), stays purple-ish for neutral
+      if (currentPH < 7) {
+        litmusColor = '#ef4444'; // Red
+      } else if (currentPH > 7) {
+        litmusColor = '#3b82f6'; // Blue
+      } else {
+        litmusColor = '#A855F7'; // Purple (Neutral)
+      }
+      renderChemistryCanvas();
+    }
+
+    // Biology Microscope Sandbox
+    function renderBiologyCanvas() {
+      const canvas = document.getElementById("workbench-canvas");
+      let radius = 25 * magPower;
+      
+      canvas.innerHTML = `
+        <div class="flex-column" style="align-items:center; width:100%;">
+          <!-- Lens Viewfinder circle -->
+          <div style="width:200px; height:200px; border-radius:50%; border:5px solid var(--neutral-dark); background:white; overflow:hidden; display:flex; align-items:center; justify-content:center; position:relative; box-shadow:0 10px 20px rgba(0,0,0,0.1);">
+            
+            <!-- Cell representations -->
+            <svg width="100%" height="100%">
+              <circle cx="100" cy="100" r="${radius}" fill="rgba(5, 150, 105, 0.2)" stroke="var(--success-green)" stroke-width="2"/>
+              <circle cx="100" cy="100" r="${radius/4}" fill="var(--success-green)"/>
+              
+              <!-- Adjacent cell patterns -->
+              <circle cx="40" cy="60" r="${radius * 0.7}" fill="rgba(5, 150, 105, 0.15)" stroke="var(--success-green)" stroke-width="1.5"/>
+              <circle cx="160" cy="140" r="${radius * 0.7}" fill="rgba(5, 150, 105, 0.15)" stroke="var(--success-green)" stroke-width="1.5"/>
+            </svg>
+          </div>
+          <div class="lab-indicator" style="background:var(--lavender-fill); color:var(--primary-purple); margin-top:20px;">
+            Lens Magnification power: ${magPower * 100}x
+          </div>
+        </div>
+      `;
+    }
+
+    function zoomLens(level) {
+      STEMQuestUI.playAudio('click');
+      magPower = level === 100 ? 1.2 : (level === 400 ? 2.2 : 3.5);
+      renderBiologyCanvas();
+    }
+
+    // Mathematics Graph Sandbox
+    function renderMathCanvas() {
+      const canvas = document.getElementById("workbench-canvas");
+      canvas.innerHTML = `
+        <div class="flex-column" style="align-items:center; width:100%;">
+          <div class="grid-math-canvas">
+            ${points.map(pt => `
+              <div class="math-point" style="left: ${pt.x * 30}px; top: ${pt.y * 30}px;" onclick="alert('Point ${pt.label}: Coordinates (${pt.x}, ${10 - pt.y})')">
+                <span style="position:absolute; top:-20px; left:12px; font-weight:700; font-size:12px;">${pt.label}(${pt.x},${10 - pt.y})</span>
+              </div>
+            `).join("")}
+            <!-- Connecting line -->
+            <svg style="position:absolute; width:100%; height:100%; top:0; left:0;">
+              <line x1="${points[0].x * 30}" y1="${points[0].y * 30}" x2="${points[1].x * 30}" y2="${points[1].y * 30}" stroke="var(--quest-pink)" stroke-width="3" />
+            </svg>
+          </div>
+          <p style="font-size:12px; font-weight:600; color:#4B5563; margin-top:15px;">Linear line equation: y = -0.5x + 5.5</p>
+        </div>
+      `;
+    }
+
+    // Complete Validation
+    function verifyExperiment() {
+      STEMQuestUI.playAudio('level-up');
+      
+      // Complete in state
+      window.STEMQuestState.completeLab(activeLab);
+
+      const overlay = document.getElementById("stemquest-modal-overlay");
+      const content = document.getElementById("stemquest-modal-content");
+      if (overlay && content) {
+        content.innerHTML = `
+          <div style="font-size: 60px; margin-bottom: 10px;">🧪</div>
+          <h2 style="font-size: 28px; color: var(--success-green); margin-bottom: 10px;">Experiment Logged!</h2>
+          <p style="font-size: 15px; color:#4B5563; margin-bottom: 20px;">
+            The simulation parameters have been saved to your **Lab Journal**. Well done!
+          </p>
+          <div style="display:flex; justify-content:center; gap:20px; margin-bottom:30px;">
+            <div class="stat-chip xp" style="padding:8px 16px;">
+              <i class="fas fa-star"></i> +60 XP
+            </div>
+            <div class="stat-chip coins" style="padding:8px 16px;">
+              <i class="fas fa-coins"></i> +15 Coins
+            </div>
+          </div>
+          <button class="btn btn-success" onclick="STEMQuestUI.closeModal()">Continue Sandbox</button>
+        `;
+        overlay.style.display = "flex";
+        STEMQuestUI.triggerConfetti();
+      }
+    }
+  </script>
+</body>
+</html>

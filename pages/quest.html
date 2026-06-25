@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STEMQuest - Active Mission</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/animations.css">
+  <link rel="stylesheet" href="../css/pages.css">
+  <style>
+    .boss-hud {
+      background: radial-gradient(circle at top, rgba(220,38,38,0.15) 0%, rgba(30,27,75,0.02) 100%);
+      border: 2px solid var(--danger-red);
+      border-radius: var(--border-radius-md);
+      padding: 16px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <main class="main-content" style="max-width: 800px;">
+      <!-- Exit header -->
+      <div class="flex-row-between" style="margin-bottom: 20px;">
+        <span style="font-weight: 700; font-family: var(--font-display); font-size:18px; color: var(--primary-purple);" id="quest-header-title">Active Quest</span>
+        <button class="btn btn-secondary btn-sm" onclick="confirmExit()"><i class="fas fa-times"></i> Exit</button>
+      </div>
+
+      <!-- Segmented Progress Bar -->
+      <div class="quest-progress-bar" id="progress-container"></div>
+
+      <!-- Main Step Canvas -->
+      <div class="quest-step-content" id="step-canvas">
+        <!-- Rendered dynamically by JS -->
+      </div>
+
+      <!-- Footer Buttons -->
+      <div class="flex-row-between" id="step-nav-buttons">
+        <button class="btn btn-secondary" id="btn-prev" onclick="prevStep()" style="visibility: hidden;"><i class="fas fa-arrow-left"></i> Back</button>
+        <button class="btn btn-primary" id="btn-next" onclick="nextStep()">Continue <i class="fas fa-arrow-right"></i></button>
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/state.js"></script>
+  <script src="../js/db.js"></script>
+  <script src="../js/ui.js"></script>
+  <script>
+    let activeQuest = null;
+    let isBossMode = false;
+    let currentStepIdx = 0;
+    let totalSteps = 0;
+    
+    // Checkpoint states
+    let hasAnsweredCheckpoint = false;
+    let isCheckpointCorrect = false;
+
+    // Mini activity states
+    let activitySelectedId = null;
+
+    // Boss fight states
+    let bossQuestions = [];
+    let bossQIdx = 0;
+    let bossHP = 100;
+    let studentHP = 100;
+    let hasAnsweredBossQ = false;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      // Initialize state and UI, but omit bottomNav on gameplay screens to increase focus
+      STEMQuestUI.initCommonUI(null);
+      document.querySelector(".app-nav").style.display = "none"; // Hide tab navigation in full-gameplay
+
+      const params = new URLSearchParams(window.location.search);
+      const questId = params.get("id") || "phys_q1";
+      isBossMode = params.get("boss") === "true";
+
+      if (isBossMode) {
+        setupBossBattle(questId);
+      } else {
+        setupStandardQuest(questId);
+      }
+    });
+
+    function setupStandardQuest(questId) {
+      activeQuest = window.STEMQuestDB.quests[questId];
+      if (!activeQuest) return;
+
+      document.getElementById("quest-header-title").innerText = activeQuest.name;
+      totalSteps = activeQuest.steps.length;
+      currentStepIdx = 0;
+
+      renderProgressSegments();
+      loadStep();
+    }
+
+    function setupBossBattle(chapterId) {
+      const chapter = window.STEMQuestDB.chapters.find(c => c.id === chapterId);
+      if (!chapter) return;
+
+      // Extract all boss-battle question banks from the chapter quests
+      bossQuestions = [];
+      chapter.quests.forEach(qId => {
+        const quest = window.STEMQuestDB.quests[qId];
+        if (quest) {
+          const bossStep = quest.steps.find(s => s.type === "boss-battle");
+          if (bossStep) bossQuestions.push(...bossStep.questions);
+        }
+      });
+
+      // Mock details
+      activeQuest = {
+        id: chapter.id,
+        name: `Chapter Boss: ${chapter.name}`,
+        chapterId: chapter.id
+      };
+
+      document.getElementById("quest-header-title").innerText = activeQuest.name;
+      totalSteps = 1; // Boss battle behaves as one massive multi-part step
+      currentStepIdx = 0;
+
+      renderProgressSegments();
+      loadBossStep();
+    }
+
+    function renderProgressSegments() {
+      const container = document.getElementById("progress-container");
+      let html = "";
+      for (let i = 0; i < totalSteps; i++) {
+        html += `<div class="quest-progress-segment ${i === 0 ? 'active' : ''}"></div>`;
+      }
+      container.innerHTML = html;
+    }
+
+    function updateProgressUI() {
+      const segments = document.querySelectorAll(".quest-progress-segment");
+      segments.forEach((seg, idx) => {
+        seg.className = "quest-progress-segment";
+        if (idx < currentStepIdx) seg.classList.add("completed");
+        if (idx === currentStepIdx) seg.classList.add("active");
+      });
+    }
+
+    function loadStep() {
+      updateProgressUI();
+      const canvas = document.getElementById("step-canvas");
+      const step = activeQuest.steps[currentStepIdx];
+      
+      // Control button states
+      document.getElementById("btn-prev").style.visibility = currentStepIdx > 0 ? "visible" : "hidden";
+      document.getElementById("btn-next").innerHTML = currentStepIdx === totalSteps - 1 ? 'Finish Mission <i class="fas fa-check"></i>' : 'Continue <i class="fas fa-arrow-right"></i>';
+      document.getElementById("btn-next").disabled = false;
+
+      if (step.type === "concept") {
+        canvas.innerHTML = `
+          <div class="anim-slide-up">
+            <h2 style="font-size: 26px; color: var(--primary-purple); margin-bottom: 12px;">${step.title}</h2>
+            <div style="font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+              ${step.content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}
+            </div>
+            
+            <div class="glass-panel" style="padding: 20px; font-family: monospace; text-align: center; font-size: 18px; margin-bottom: 24px; background: rgba(107,33,168,0.03);">
+              ${step.diagram}
+            </div>
+
+            <!-- Voice TTS Button -->
+            <button class="btn btn-secondary btn-sm" onclick="speakConcept('${step.content}')" style="margin-top: 10px;">
+              <i class="fas fa-volume-up"></i> Listen to Explanation
+            </button>
+          </div>
+        `;
+      } 
+      else if (step.type === "checkpoint") {
+        hasAnsweredCheckpoint = false;
+        isCheckpointCorrect = false;
+        document.getElementById("btn-next").disabled = true; // Block continuation until answered
+
+        canvas.innerHTML = `
+          <div class="anim-slide-up">
+            <span style="font-size:11px; font-weight:700; color:var(--quest-pink); text-transform:uppercase; display:block; margin-bottom: 6px;">Concept Checkpoint</span>
+            <h3 style="font-size: 20px; color: var(--neutral-dark); margin-bottom: 20px;">${step.question}</h3>
+            
+            <div class="flex-column" id="options-container">
+              ${step.options.map((opt, idx) => `
+                <div class="mcq-option" onclick="submitCheckpoint(${idx}, ${step.correctIndex}, '${step.explanation}')">
+                  <span style="width: 24px; height: 24px; border-radius:50%; border:2px solid var(--muted-gray); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700;">${String.fromCharCode(65 + idx)}</span>
+                  <span>${opt}</span>
+                </div>
+              `).join("")}
+            </div>
+            <div id="checkpoint-feedback" style="margin-top:20px; padding: 15px; border-radius: var(--border-radius-sm); font-size: 14px; display:none;"></div>
+          </div>
+        `;
+      }
+      else if (step.type === "mini-activity") {
+        activitySelectedId = null;
+        document.getElementById("btn-next").disabled = true;
+
+        canvas.innerHTML = `
+          <div class="anim-slide-up">
+            <span style="font-size:11px; font-weight:700; color:var(--primary-purple); text-transform:uppercase; display:block; margin-bottom: 6px;">Interactive Task</span>
+            <h2 style="font-size: 24px; margin-bottom: 10px;">${step.title}</h2>
+            <p style="font-size: 14px; color:#4B5563; margin-bottom: 20px;">${step.instruction}</p>
+            
+            <div class="drag-items-pool">
+              ${step.elements.map(el => `
+                <div class="draggable-chip" id="${el.id}" onclick="selectActivityItem('${el.id}', ${el.isCorrect}, '${step.elements.find(x => x.isCorrect).name}')">${el.name}</div>
+              `).join("")}
+            </div>
+            <div id="activity-feedback" style="margin-top:20px; font-weight: 700; display:none;"></div>
+          </div>
+        `;
+      }
+      else if (step.type === "boss-battle") {
+        // In standard quest flow, a quick boss battle has 3 questions
+        bossQuestions = step.questions;
+        bossQIdx = 0;
+        bossHP = 100;
+        studentHP = 100;
+        loadBossQuestion();
+      }
+    }
+
+    function speakConcept(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.95;
+        window.speechSynthesis.speak(utterance);
+      } else {
+        alert("Text-to-Speech is not supported on your device.");
+      }
+    }
+
+    function submitCheckpoint(index, correctIdx, explanation) {
+      if (hasAnsweredCheckpoint) return; // Allow single answer attempt
+      hasAnsweredCheckpoint = true;
+      
+      const options = document.getElementById("options-container").children;
+      const feedbackDiv = document.getElementById("checkpoint-feedback");
+
+      if (index === correctIdx) {
+        isCheckpointCorrect = true;
+        options[index].classList.add("correct");
+        STEMQuestUI.playAudio('correct');
+        
+        feedbackDiv.style.background = "rgba(5, 150, 105, 0.1)";
+        feedbackDiv.style.color = "var(--success-green)";
+        feedbackDiv.style.border = "1px solid var(--success-green)";
+        feedbackDiv.innerHTML = `<i class="fas fa-check-circle" style="margin-right:6px;"></i> Correct! ${explanation}`;
+      } else {
+        options[index].classList.add("incorrect");
+        options[correctIdx].classList.add("correct");
+        STEMQuestUI.playAudio('incorrect');
+        
+        feedbackDiv.style.background = "rgba(220, 38, 38, 0.1)";
+        feedbackDiv.style.color = "var(--danger-red)";
+        feedbackDiv.style.border = "1px solid var(--danger-red)";
+        feedbackDiv.innerHTML = `<i class="fas fa-times-circle" style="margin-right:6px;"></i> Not quite. ${explanation}`;
+      }
+
+      feedbackDiv.style.display = "block";
+      document.getElementById("btn-next").disabled = false; // Enable continue button
+    }
+
+    function selectActivityItem(id, isCorrect, correctName) {
+      STEMQuestUI.playAudio('click');
+      
+      const chips = document.querySelectorAll(".draggable-chip");
+      chips.forEach(c => c.style.borderColor = "var(--primary-purple)");
+
+      const selectedChip = document.getElementById(id);
+      const feedback = document.getElementById("activity-feedback");
+
+      if (isCorrect) {
+        selectedChip.style.borderColor = "var(--success-green)";
+        selectedChip.style.background = "rgba(5,150,105,0.05)";
+        feedback.innerHTML = `<span style="color:var(--success-green);"><i class="fas fa-check"></i> Great job! That's correct.</span>`;
+        STEMQuestUI.playAudio('correct');
+        document.getElementById("btn-next").disabled = false;
+      } else {
+        selectedChip.style.borderColor = "var(--danger-red)";
+        selectedChip.style.background = "rgba(220,38,38,0.05)";
+        feedback.innerHTML = `<span style="color:var(--danger-red);"><i class="fas fa-times"></i> That material blocks current. Correct conductor is ${correctName}.</span>`;
+        STEMQuestUI.playAudio('incorrect');
+        // Let them try again
+      }
+      feedback.style.display = "block";
+    }
+
+    // BOSS BATTLE MECHANICS
+    function loadBossStep() {
+      loadBossQuestion();
+    }
+
+    function loadBossQuestion() {
+      hasAnsweredBossQ = false;
+      const canvas = document.getElementById("step-canvas");
+      const q = bossQuestions[bossQIdx];
+      
+      document.getElementById("btn-prev").style.visibility = "hidden";
+      document.getElementById("btn-next").disabled = true;
+
+      canvas.innerHTML = `
+        <div class="boss-hud anim-shake" id="boss-hud-box">
+          <h3 style="color:var(--danger-red); font-size: 22px;"><i class="fas fa-dragon"></i> ${isBossMode ? 'Chapter Guardian' : 'Gatekeeper Battle'}</h3>
+          <div class="grid-2" style="margin-top: 10px;">
+            <div>
+              <span style="font-size:12px; font-weight:700;">Guardian HP: ${bossHP}%</span>
+              <div class="battle-health-bar"><div class="battle-health-fill enemy" id="hp-boss" style="width:${bossHP}%"></div></div>
+            </div>
+            <div>
+              <span style="font-size:12px; font-weight:700;">Your HP: ${studentHP}%</span>
+              <div class="battle-health-bar"><div class="battle-health-fill" id="hp-student" style="width:${studentHP}%"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="anim-slide-up" style="margin-top: 20px;">
+          <span style="font-size:12px; font-weight:700; color:var(--danger-red); text-transform:uppercase;">Question ${bossQIdx + 1} of ${bossQuestions.length}</span>
+          <h3 style="font-size: 18px; margin-top: 6px; margin-bottom: 20px;">${q.q}</h3>
+          
+          <div class="flex-column" id="boss-options">
+            ${q.options.map((opt, idx) => `
+              <div class="mcq-option" onclick="submitBossAnswer(${idx}, ${q.correctIndex})">
+                <span style="width: 24px; height: 24px; border-radius:50%; border:2px solid var(--muted-gray); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700;">${String.fromCharCode(65 + idx)}</span>
+                <span>${opt}</span>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    function submitBossAnswer(idx, correctIdx) {
+      if (hasAnsweredBossQ) return;
+      hasAnsweredBossQ = true;
+
+      const options = document.getElementById("boss-options").children;
+      const hud = document.getElementById("boss-hud-box");
+
+      if (idx === correctIdx) {
+        options[idx].classList.add("correct");
+        STEMQuestUI.playAudio('correct');
+        
+        // Attack Boss
+        bossHP = Math.max(0, bossHP - Math.ceil(100 / bossQuestions.length));
+        document.getElementById("hp-boss").style.width = bossHP + "%";
+        
+        // Bouncing hit animation
+        hud.style.animation = "float 0.3s ease infinite";
+        setTimeout(() => hud.style.animation = "none", 600);
+      } else {
+        options[idx].classList.add("incorrect");
+        options[correctIdx].classList.add("correct");
+        STEMQuestUI.playAudio('incorrect');
+        
+        // Take Damage
+        studentHP = Math.max(0, studentHP - 25);
+        document.getElementById("hp-student").style.width = studentHP + "%";
+        
+        // Shake animation
+        document.getElementById("step-canvas").className = "quest-step-content anim-shake";
+        setTimeout(() => document.getElementById("step-canvas").className = "quest-step-content", 500);
+      }
+
+      // Check battle conclusion
+      setTimeout(() => {
+        if (bossHP <= 0 || studentHP <= 0 || bossQIdx === bossQuestions.length - 1) {
+          concludeBossBattle();
+        } else {
+          bossQIdx++;
+          loadBossQuestion();
+        }
+      }, 1500);
+    }
+
+    function concludeBossBattle() {
+      if (studentHP <= 0) {
+        STEMQuestUI.playAudio('incorrect');
+        alert("You were defeated by the Guardian! Let's review the concepts and try again.");
+        window.location.reload();
+      } else {
+        // Complete the quest/chapter
+        finishQuest();
+      }
+    }
+
+    // GENERAL STEPS NAVIGATION
+    function prevStep() {
+      if (currentStepIdx > 0) {
+        STEMQuestUI.playAudio('click');
+        currentStepIdx--;
+        loadStep();
+      }
+    }
+
+    function nextStep() {
+      if (isBossMode) return; // Boss battle handles its own progression
+
+      const step = activeQuest.steps[currentStepIdx];
+      
+      // If we are at the end, complete!
+      if (currentStepIdx === totalSteps - 1) {
+        finishQuest();
+        return;
+      }
+
+      STEMQuestUI.playAudio('click');
+      currentStepIdx++;
+      loadStep();
+    }
+
+    function finishQuest() {
+      STEMQuestUI.playAudio('level-up');
+      
+      // Update state
+      const rewards = window.STEMQuestState.completeQuest(activeQuest.id, 100);
+      
+      // Setup badge awards if applicable
+      if (isBossMode && activeQuest.id === 'phys_ch1') {
+        window.STEMQuestState.addBadge("electricity-conqueror");
+      }
+      
+      const xpReward = rewards ? rewards.xpEarned : 50;
+      const coinsReward = rewards ? rewards.coinsEarned : 20;
+
+      // Show overlay popup
+      const overlay = document.getElementById("stemquest-modal-overlay");
+      const content = document.getElementById("stemquest-modal-content");
+      if (overlay && content) {
+        content.innerHTML = `
+          <div style="font-size: 60px; margin-bottom: 10px;">🏆</div>
+          <h2 style="font-size: 32px; color: var(--success-green); margin-bottom: 10px;">Quest Completed!</h2>
+          <p style="font-size: 16px; margin-bottom: 20px; color:#4B5563;">
+            You have successfully completed <strong>${activeQuest.name}</strong> and saved the village!
+          </p>
+          <div style="display:flex; justify-content:center; gap:20px; margin-bottom:30px;">
+            <div class="stat-chip xp" style="font-size: 16px; padding: 10px 20px;">
+              <i class="fas fa-star"></i> +${xpReward} XP
+            </div>
+            <div class="stat-chip coins" style="font-size: 16px; padding: 10px 20px;">
+              <i class="fas fa-coins"></i> +${coinsReward} Coins
+            </div>
+          </div>
+          <button class="btn btn-success btn-lg" onclick="exitToDashboard()">Claim Rewards</button>
+        `;
+        overlay.style.display = "flex";
+        STEMQuestUI.triggerConfetti();
+      }
+    }
+
+    function confirmExit() {
+      STEMQuestUI.playAudio('click');
+      if (confirm("Are you sure you want to pause your quest? Your progress is saved.")) {
+        exitToDashboard();
+      }
+    }
+
+    function exitToDashboard() {
+      STEMQuestUI.closeModal();
+      window.location.href = "dashboard.html";
+    }
+  </script>
+</body>
+</html>

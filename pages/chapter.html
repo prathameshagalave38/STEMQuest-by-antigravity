@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STEMQuest - Chapter Missions</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/animations.css">
+  <link rel="stylesheet" href="../css/pages.css">
+</head>
+<body>
+
+  <div class="app-container">
+    <main class="main-content">
+      <div style="margin-bottom: 20px;">
+        <button class="btn btn-secondary btn-sm" id="btn-back"><i class="fas fa-arrow-left"></i> Back</button>
+      </div>
+
+      <!-- Chapter Metadata -->
+      <div class="glass-card anim-slide-up" style="margin-bottom: 30px;">
+        <h2 id="chapter-title" style="color: var(--primary-purple);">Chapter Title</h2>
+        <p id="chapter-desc" style="font-size: 14px; color: #4B5563; margin-top: 5px;">Chapter description loading...</p>
+      </div>
+
+      <!-- Path node trail -->
+      <div class="chapter-path anim-scale-in" id="path-nodes-container">
+        <!-- Dynamically rendered -->
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/state.js"></script>
+  <script src="../js/db.js"></script>
+  <script src="../js/ui.js"></script>
+  <script>
+    let chId = "";
+
+    document.addEventListener("DOMContentLoaded", () => {
+      STEMQuestUI.initCommonUI('map');
+      
+      const params = new URLSearchParams(window.location.search);
+      chId = params.get("id") || "phys_ch1";
+
+      const chapter = window.STEMQuestDB.chapters.find(c => c.id === chId);
+      if (!chapter) return;
+
+      // Update titles
+      document.getElementById("chapter-title").innerText = chapter.name;
+      document.getElementById("chapter-desc").innerText = chapter.desc;
+
+      // Set back button
+      document.getElementById("btn-back").onclick = () => {
+        window.location.href = `subject-world.html?subject=${chapter.subject}`;
+      };
+
+      renderPath(chapter);
+    });
+
+    function renderPath(chapter) {
+      const state = window.STEMQuestState.get();
+      const container = document.getElementById("path-nodes-container");
+      
+      let html = "";
+      let foundActive = false;
+
+      chapter.quests.forEach((qId, index) => {
+        const quest = window.STEMQuestDB.quests[qId];
+        if (!quest) return;
+
+        const isCompleted = state.completedQuests.includes(qId);
+        let nodeClass = "locked";
+        let iconHtml = `<i class="fas fa-lock"></i>`;
+
+        if (isCompleted) {
+          nodeClass = "completed";
+          iconHtml = `<i class="fas fa-check"></i>`;
+        } else if (!foundActive) {
+          nodeClass = "active";
+          iconHtml = `<i class="fas fa-play"></i>`;
+          foundActive = true; // First uncompleted quest is the active one
+        }
+
+        html += `
+          <div class="path-node ${nodeClass}" onclick="launchQuest('${qId}', '${nodeClass}')">
+            ${iconHtml}
+            <div class="path-node-label">
+              <span style="font-size:12px; font-weight:700; color:var(--quest-pink); text-transform:uppercase;">Quest ${index + 1}</span><br>
+              ${quest.name}
+            </div>
+          </div>
+        `;
+      });
+
+      // Add Final Boss Battle Node at the end
+      let bossClass = "locked";
+      let bossIcon = `<i class="fas fa-ghost"></i>`;
+      
+      // Unlocked if all quests in the chapter are complete
+      const allDone = chapter.quests.every(qId => state.completedQuests.includes(qId));
+      if (allDone) {
+        bossClass = "active glow-pink";
+        bossIcon = `<i class="fas fa-dragon" style="color:var(--quest-pink)"></i>`;
+      }
+
+      html += `
+        <div class="path-node ${bossClass}" style="width: 80px; height: 80px; border-width: 6px;" onclick="launchBossBattle('${chapter.id}', '${bossClass}')">
+          ${bossIcon}
+          <div class="path-node-label" style="top:25px;">
+            <span style="font-size:12px; font-weight:700; color:var(--danger-red); text-transform:uppercase;">Boss Battle</span><br>
+            Defeat the Guardian
+          </div>
+        </div>
+      `;
+
+      container.innerHTML = html;
+    }
+
+    function launchQuest(questId, nodeClass) {
+      if (nodeClass === "locked") {
+        STEMQuestUI.playAudio('incorrect');
+        alert("You must complete the previous quests first!");
+        return;
+      }
+      STEMQuestUI.playAudio('click');
+      window.location.href = `quest.html?id=${questId}`;
+    }
+
+    function launchBossBattle(chapterId, nodeClass) {
+      if (nodeClass === "locked") {
+        STEMQuestUI.playAudio('incorrect');
+        alert("You must complete all chapter quests to summon the Boss!");
+        return;
+      }
+      STEMQuestUI.playAudio('click');
+      window.location.href = `quest.html?id=${chapterId}&boss=true`; // Boss battles are triggered inside quest page
+    }
+  </script>
+</body>
+</html>

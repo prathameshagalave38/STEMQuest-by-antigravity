@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STEMQuest - Build Avatar</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/animations.css">
+  <link rel="stylesheet" href="../css/pages.css">
+  <style>
+    body {
+      background: radial-gradient(circle at bottom left, rgba(107,33,168,0.1) 0%, rgba(219,39,119,0.05) 50%, rgba(243,244,246,1) 100%);
+    }
+    .customizer-options {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+    .option-btn {
+      padding: 12px;
+      border: 2px solid var(--muted-gray);
+      border-radius: var(--border-radius-sm);
+      text-align: center;
+      cursor: pointer;
+      background: white;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      font-size: 14px;
+    }
+    .option-btn.active {
+      border-color: var(--primary-purple);
+      background: var(--lavender-fill);
+      color: var(--primary-purple);
+      transform: scale(1.05);
+    }
+    .option-color-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 3px solid white;
+      box-shadow: 0 0 0 2px var(--muted-gray);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .option-color-btn.active {
+      box-shadow: 0 0 0 3px var(--primary-purple);
+      transform: scale(1.1);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="main-content" style="padding-top: 40px;">
+    <div style="text-align: center; margin-bottom: 24px;" class="anim-slide-up">
+      <h2>Build Your Hero Avatar</h2>
+      <p style="font-size: 14px; color: #4B5563;">Customize your look to match your favorite STEM profession.</p>
+    </div>
+
+    <div class="avatar-builder-container anim-slide-up" style="max-width: 900px; margin: 0 auto;">
+      <!-- Preview Column -->
+      <div class="glass-card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; padding: 30px;">
+        <div class="avatar-preview-box" id="preview-avatar" style="width: 220px; height: 220px; border-radius: 50%;">
+          <!-- SVG will be injected here -->
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="randomizeAvatar()">
+          <i class="fas fa-random"></i> Randomize Look
+        </button>
+      </div>
+
+      <!-- Controls Column -->
+      <div class="glass-card" style="padding: 24px;">
+        <!-- Tabs -->
+        <div class="avatar-customizer-tabs">
+          <div class="customizer-tab active" onclick="switchTab('role', this)">STEM Role</div>
+          <div class="customizer-tab" onclick="switchTab('skin', this)">Skin Tone</div>
+          <div class="customizer-tab" onclick="switchTab('hair', this)">Hair Style</div>
+          <div class="customizer-tab" onclick="switchTab('outfit', this)">Outfits</div>
+        </div>
+
+        <!-- Role options -->
+        <div class="tab-panel" id="panel-role">
+          <p style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">Choose Your Profession Tag:</p>
+          <div class="customizer-options">
+            <div class="option-btn active" data-val="scientist" onclick="updateConfig('role', 'scientist')">Scientist</div>
+            <div class="option-btn" data-val="astronaut" onclick="updateConfig('role', 'astronaut')">Astronaut</div>
+            <div class="option-btn" data-val="engineer" onclick="updateConfig('role', 'engineer')">Engineer</div>
+            <div class="option-btn" data-val="robotics" onclick="updateConfig('role', 'robotics')">Robotics</div>
+            <div class="option-btn" data-val="inventor" onclick="updateConfig('role', 'inventor')">Inventor</div>
+          </div>
+        </div>
+
+        <!-- Skin options -->
+        <div class="tab-panel" id="panel-skin" style="display: none;">
+          <p style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">Select Skin Tone:</p>
+          <div style="display: flex; gap: 16px;">
+            <div class="option-color-btn active" style="background-color: #FDBA74;" onclick="updateConfig('skin', '#FDBA74', this)"></div>
+            <div class="option-color-btn" style="background-color: #F59E0B;" onclick="updateConfig('skin', '#F59E0B', this)"></div>
+            <div class="option-color-btn" style="background-color: #D97706;" onclick="updateConfig('skin', '#D97706', this)"></div>
+            <div class="option-color-btn" style="background-color: #FCA5A5;" onclick="updateConfig('skin', '#FCA5A5', this)"></div>
+          </div>
+        </div>
+
+        <!-- Hair options -->
+        <div class="tab-panel" id="panel-hair" style="display: none;">
+          <p style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">Hair Cut / Style:</p>
+          <div class="customizer-options">
+            <div class="option-btn active" data-val="short" onclick="updateConfig('hair', 'short')">Short Crop</div>
+            <div class="option-btn" data-val="curly" onclick="updateConfig('hair', 'curly')">Curly Locks</div>
+            <div class="option-btn" data-val="long" onclick="updateConfig('hair', 'long')">High Braid</div>
+            <div class="option-btn" data-val="dread" onclick="updateConfig('hair', 'dread')">Ponytail</div>
+          </div>
+        </div>
+
+        <!-- Outfit options -->
+        <div class="tab-panel" id="panel-outfit" style="display: none;">
+          <p style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">Apparel / Outfits:</p>
+          <div class="customizer-options">
+            <div class="option-btn active" data-val="rural1" onclick="updateConfig('outfit', 'rural1')">Casual Kurta</div>
+            <div class="option-btn" data-val="labcoat" onclick="updateConfig('outfit', 'labcoat')">Lab Coat</div>
+            <div class="option-btn" data-val="spacesuit" onclick="updateConfig('outfit', 'spacesuit')">Astral Suit</div>
+            <div class="option-btn" data-val="school" onclick="updateConfig('outfit', 'school')">School Uniform</div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-lg" onclick="saveAvatar()" style="width: 100%; margin-top: 30px;">
+          Lock In Avatar & Start <i class="fas fa-check"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/state.js"></script>
+  <script src="../js/ui.js"></script>
+  <script>
+    // Initial avatar configuration
+    let avatarConfig = {
+      role: 'scientist',
+      skin: '#FDBA74',
+      hair: 'short',
+      outfit: 'rural1',
+      accessory: 'none'
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+      renderAvatar();
+    });
+
+    function switchTab(tabId, tabElement) {
+      STEMQuestUI.playAudio('click');
+      document.querySelectorAll(".customizer-tab").forEach(tab => tab.classList.remove("active"));
+      tabElement.classList.add("active");
+
+      document.querySelectorAll(".tab-panel").forEach(panel => panel.style.display = "none");
+      document.getElementById("panel-" + tabId).style.display = "block";
+    }
+
+    function updateConfig(property, val, el) {
+      STEMQuestUI.playAudio('click');
+      avatarConfig[property] = val;
+
+      if (el) {
+        // Handle skin tone circular selector Highlights
+        document.querySelectorAll(".option-color-btn").forEach(btn => btn.classList.remove("active"));
+        el.classList.add("active");
+      } else {
+        // Handle normal button Highlights
+        const panel = document.getElementById("panel-" + property);
+        panel.querySelectorAll(".option-btn").forEach(btn => {
+          btn.classList.remove("active");
+          if (btn.getAttribute("data-val") === val) btn.classList.add("active");
+        });
+      }
+
+      renderAvatar();
+    }
+
+    function renderAvatar() {
+      const container = document.getElementById("preview-avatar");
+      
+      let color = "#6B21A8"; // purple
+      if (avatarConfig.role === "astronaut") color = "#3b82f6";
+      if (avatarConfig.role === "engineer") color = "#f59e0b";
+      if (avatarConfig.role === "robotics") color = "#06b6d4";
+      if (avatarConfig.role === "inventor") color = "#ec4899";
+
+      // Draw SVG based on selections
+      let svg = `
+        <svg viewBox="0 0 100 100" width="100%" height="100%">
+          <circle cx="50" cy="50" r="45" fill="${color}" opacity="0.2"/>
+          <circle cx="50" cy="45" r="22" fill="${avatarConfig.skin}"/>
+          
+          <!-- Hair Styles -->
+          ${avatarConfig.hair === 'short' ? `
+            <path d="M 32 35 C 32 20, 68 20, 68 35 C 68 35, 62 25, 50 25 C 38 25, 32 35, 32 35 Z" fill="#2D3748"/>
+          ` : ''}
+          ${avatarConfig.hair === 'curly' ? `
+            <path d="M 28 35 Q 26 28 32 26 Q 36 20 45 22 Q 55 20 62 25 Q 72 26 70 35" stroke="#1A202C" stroke-width="4" fill="none"/>
+            <path d="M 32 35 C 32 20, 68 20, 68 35 Z" fill="#1A202C"/>
+          ` : ''}
+          ${avatarConfig.hair === 'long' ? `
+            <path d="M 32 35 C 32 20, 68 20, 68 35 Z" fill="#000"/>
+            <rect x="46" y="55" width="8" height="25" fill="#000" rx="3"/>
+          ` : ''}
+          ${avatarConfig.hair === 'dread' ? `
+            <path d="M 32 35 C 32 20, 68 20, 68 35 Z" fill="#4A5568"/>
+            <circle cx="68" cy="50" r="8" fill="#4A5568"/>
+          ` : ''}
+
+          <!-- Eyes -->
+          <circle cx="43" cy="42" r="3" fill="#1E1B4B"/>
+          <circle cx="57" cy="42" r="3" fill="#1E1B4B"/>
+          <path d="M 42 50 Q 50 58 58 50" stroke="#1E1B4B" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+          <!-- Roles Accessories -->
+          ${avatarConfig.role === 'scientist' ? `
+            <rect x="36" y="38" width="12" height="8" rx="2" stroke="#1E1B4B" stroke-width="2" fill="rgba(255,255,255,0.7)"/>
+            <rect x="52" y="38" width="12" height="8" rx="2" stroke="#1E1B4B" stroke-width="2" fill="rgba(255,255,255,0.7)"/>
+            <line x1="48" y1="42" x2="52" y2="42" stroke="#1E1B4B" stroke-width="2"/>
+          ` : ''}
+          ${avatarConfig.role === 'astronaut' ? `
+            <circle cx="50" cy="45" r="28" stroke="#FFFFFF" stroke-width="2" fill="none" opacity="0.7"/>
+            <path d="M 30 35 Q 50 20 70 35" stroke="#FFFFFF" stroke-width="1.5" fill="none" opacity="0.8"/>
+          ` : ''}
+          ${avatarConfig.role === 'engineer' ? `
+            <path d="M 30 32 Q 50 15 70 32 Z" fill="#FBBF24" stroke="#1E1B4B" stroke-width="1.5"/>
+            <rect x="26" y="30" width="48" height="3" rx="1.5" fill="#F59E0B"/>
+          ` : ''}
+          ${avatarConfig.role === 'robotics' ? `
+            <rect x="25" y="40" width="4" height="10" fill="#0891B2" rx="1"/>
+            <rect x="71" y="40" width="4" height="10" fill="#0891B2" rx="1"/>
+            <path d="M 27 40 Q 50 22 73 40" stroke="#0891B2" stroke-width="2" fill="none"/>
+          ` : ''}
+          ${avatarConfig.role === 'inventor' ? `
+            <circle cx="50" cy="20" r="4" fill="#FBBF24"/>
+            <line x1="50" y1="24" x2="50" y2="28" stroke="#1E1B4B" stroke-width="2"/>
+          ` : ''}
+
+          <!-- Shirt/Outfits -->
+          ${avatarConfig.outfit === 'rural1' ? `
+            <path d="M 22 82 C 22 70 32 62 50 62 C 68 62 78 70 78 82 Z" fill="#9061F9"/>
+            <path d="M 45 62 L 50 72 L 55 62 Z" fill="#F87171"/>
+          ` : ''}
+          ${avatarConfig.outfit === 'labcoat' ? `
+            <path d="M 22 82 C 22 70 32 62 50 62 C 68 62 78 70 78 82 Z" fill="#E2E8F0"/>
+            <path d="M 45 62 L 50 82 L 55 62 Z" fill="#312E81"/>
+            <rect x="42" y="70" width="16" height="12" fill="#E2E8F0" stroke="#CBD5E1" rx="1"/>
+          ` : ''}
+          ${avatarConfig.outfit === 'spacesuit' ? `
+            <path d="M 22 82 C 22 70 32 62 50 62 C 68 62 78 70 78 82 Z" fill="#FFF"/>
+            <circle cx="50" cy="72" r="5" fill="#3B82F6"/>
+          ` : ''}
+          ${avatarConfig.outfit === 'school' ? `
+            <path d="M 22 82 C 22 70 32 62 50 62 C 68 62 78 70 78 82 Z" fill="#1E3A8A"/>
+            <path d="M 40 62 L 50 74 L 60 62 Z" fill="#FFF"/>
+            <polygon points="48,65 52,65 50,75" fill="#EF4444"/>
+          ` : ''}
+        </svg>
+      `;
+
+      container.innerHTML = svg;
+    }
+
+    function randomizeAvatar() {
+      const roles = ['scientist', 'astronaut', 'engineer', 'robotics', 'inventor'];
+      const skins = ['#FDBA74', '#F59E0B', '#D97706', '#FCA5A5'];
+      const hairs = ['short', 'curly', 'long', 'dread'];
+      const outfits = ['rural1', 'labcoat', 'spacesuit', 'school'];
+
+      avatarConfig.role = roles[Math.floor(Math.random() * roles.length)];
+      avatarConfig.skin = skins[Math.floor(Math.random() * skins.length)];
+      avatarConfig.hair = hairs[Math.floor(Math.random() * hairs.length)];
+      avatarConfig.outfit = outfits[Math.floor(Math.random() * outfits.length)];
+
+      STEMQuestUI.playAudio('click');
+      
+      // Update highlights in UI to match random values
+      updateHighlights();
+      renderAvatar();
+    }
+
+    function updateHighlights() {
+      // Roles
+      document.querySelectorAll("#panel-role .option-btn").forEach(btn => {
+        btn.classList.remove("active");
+        if (btn.getAttribute("data-val") === avatarConfig.role) btn.classList.add("active");
+      });
+      // Skins
+      document.querySelectorAll("#panel-skin .option-color-btn").forEach(btn => {
+        btn.classList.remove("active");
+        const rgb2hex = (rgb) => `#${rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/).slice(1).map(n => parseInt(n, 10).toString(16).padStart(2, '0')).join('').toUpperCase()}`;
+        try {
+          if (rgb2hex(btn.style.backgroundColor) === avatarConfig.skin) btn.classList.add("active");
+        } catch(e) {}
+      });
+      // Hairs
+      document.querySelectorAll("#panel-hair .option-btn").forEach(btn => {
+        btn.classList.remove("active");
+        if (btn.getAttribute("data-val") === avatarConfig.hair) btn.classList.add("active");
+      });
+      // Outfits
+      document.querySelectorAll("#panel-outfit .option-btn").forEach(btn => {
+        btn.classList.remove("active");
+        if (btn.getAttribute("data-val") === avatarConfig.outfit) btn.classList.add("active");
+      });
+    }
+
+    function saveAvatar() {
+      STEMQuestUI.playAudio('correct');
+      // Save avatar to state
+      window.STEMQuestState.state.user.avatar = avatarConfig;
+      window.STEMQuestState.save();
+      setTimeout(() => {
+        window.location.href = "onboarding.html";
+      }, 400);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STEMQuest - Leaderboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/animations.css">
+  <link rel="stylesheet" href="../css/pages.css">
+  <style>
+    .leaderboard-container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .rank-row {
+      display: flex;
+      align-items: center;
+      padding: 14px 20px;
+      background: white;
+      border: 1px solid var(--muted-gray);
+      border-radius: var(--border-radius-md);
+      margin-bottom: 10px;
+      gap: 16px;
+      transition: transform 0.2s ease;
+    }
+    .rank-row.user-row {
+      border: 2px solid var(--quest-pink);
+      background: var(--lavender-fill);
+      box-shadow: 0 4px 15px rgba(219,39,119,0.15);
+    }
+    .rank-number {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 800;
+      width: 32px;
+      text-align: center;
+    }
+    .rank-number.top1 { color: #D97706; }
+    .rank-number.top2 { color: #9CA3AF; }
+    .rank-number.top3 { color: #B45309; }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <main class="main-content">
+      <div class="leaderboard-container">
+        
+        <!-- Header -->
+        <div style="text-align:center; margin-bottom: 24px;" class="anim-slide-up">
+          <h2 style="font-size: 28px; color: var(--primary-purple);"><i class="fas fa-trophy"></i> Rankings Scoreboard</h2>
+          <p style="font-size: 14px; color: #4B5563;">Compete fairly with classes in Sikar district zones.</p>
+        </div>
+
+        <!-- Tabs -->
+        <div class="avatar-customizer-tabs anim-slide-up">
+          <div class="customizer-tab active" onclick="switchBoard('class', this)">Class 9-A</div>
+          <div class="customizer-tab" onclick="switchBoard('school', this)">My School</div>
+          <div class="customizer-tab" onclick="switchBoard('district', this)">District Sikar</div>
+        </div>
+
+        <!-- Settings toggle -->
+        <div class="flex-row-between anim-slide-up" style="background: rgba(255,255,255,0.6); padding: 12px 16px; border-radius: var(--border-radius-sm); border:1px solid var(--muted-gray); margin-bottom: 20px; font-size:13px;">
+          <span><i class="fas fa-user-shield" style="margin-right:5px; color:#4B5563;"></i> Share my rank on public school scoreboard</span>
+          <label style="position:relative; display:inline-block; width:40px; height:20px;">
+            <input type="checkbox" checked style="opacity:0; width:0; height:0;" id="toggle-privacy" onchange="togglePrivacy()">
+            <span style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#ccc; border-radius:34px; transition:0.3s; width:40px; height:20px; display:inline-block;" id="toggle-slider"></span>
+          </label>
+        </div>
+
+        <!-- Ranks container -->
+        <div class="flex-column anim-scale-in" id="ranks-list-container">
+          <!-- Filled by JS -->
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/state.js"></script>
+  <script src="../js/db.js"></script>
+  <script src="../js/ui.js"></script>
+  <script>
+    let activeBoard = 'class';
+    let isPublic = true;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      STEMQuestUI.initCommonUI('arena');
+      renderRanks();
+      setupPrivacySlider();
+    });
+
+    function switchBoard(type, el) {
+      STEMQuestUI.playAudio('click');
+      activeBoard = type;
+
+      document.querySelectorAll(".customizer-tab").forEach(tab => tab.classList.remove("active"));
+      el.classList.add("active");
+
+      renderRanks();
+    }
+
+    function renderRanks() {
+      const state = window.STEMQuestState.get();
+      const list = window.STEMQuestDB.leaderboard[activeBoard];
+      const container = document.getElementById("ranks-list-container");
+
+      if (!list) return;
+
+      // Update user details in mock database ranks
+      const userRankRow = list.find(row => row.isUser);
+      if (userRankRow) {
+        userRankRow.name = `${state.user.name || 'Young Innovator'} (You)`;
+        userRankRow.xp = state.xp;
+        userRankRow.level = state.level;
+        userRankRow.avatar = state.user.avatar.role;
+      }
+
+      // Sort leaderboard list descending by XP
+      const sorted = [...list].sort((a, b) => b.xp - a.xp);
+      // Re-assign ranks
+      sorted.forEach((row, idx) => row.rank = idx + 1);
+
+      // Render rows
+      container.innerHTML = sorted.map(row => {
+        if (!isPublic && row.isUser) {
+          // If opt-out, display user row separately or omit
+          return '';
+        }
+
+        let rankStyle = '';
+        if (row.rank === 1) rankStyle = 'top1';
+        else if (row.rank === 2) rankStyle = 'top2';
+        else if (row.rank === 3) rankStyle = 'top3';
+
+        const rowClass = row.isUser ? 'user-row' : '';
+
+        // Generate tiny SVG for list thumbnail
+        const avatarState = { role: row.avatar };
+        const avatarSVG = STEMQuestUI.getAvatarSVG(avatarState);
+
+        return `
+          <div class="rank-row ${rowClass}">
+            <span class="rank-number ${rankStyle}">${row.rank}</span>
+            <div style="width:36px; height:36px; border-radius:50%; overflow:hidden; background:var(--muted-gray);">
+              ${avatarSVG}
+            </div>
+            <div style="flex:1;">
+              <h4 style="font-size:16px;">${row.name}</h4>
+              <span style="font-size:12px; color:#6B7280;">Level ${row.level}</span>
+            </div>
+            <span style="font-family:var(--font-display); font-weight:800; color:var(--primary-purple);">${row.xp} XP</span>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function setupPrivacySlider() {
+      const slider = document.getElementById("toggle-slider");
+      const checkbox = document.getElementById("toggle-privacy");
+      updateSliderUI();
+    }
+
+    function togglePrivacy() {
+      STEMQuestUI.playAudio('click');
+      isPublic = !isPublic;
+      updateSliderUI();
+      renderRanks();
+    }
+
+    function updateSliderUI() {
+      const slider = document.getElementById("toggle-slider");
+      if (isPublic) {
+        slider.style.backgroundColor = "var(--success-green)";
+        slider.style.boxShadow = "inset 0 0 4px rgba(0,0,0,0.1)";
+      } else {
+        slider.style.backgroundColor = "#ccc";
+      }
+    }
+  </script>
+</body>
+</html>

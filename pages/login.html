@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STEMQuest - Login</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/animations.css">
+  <link rel="stylesheet" href="../css/pages.css">
+  <style>
+    body {
+      background: radial-gradient(circle at bottom right, rgba(107,33,168,0.1) 0%, rgba(219,39,119,0.05) 50%, rgba(243,244,246,1) 100%);
+    }
+    .role-select {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .role-btn {
+      flex: 1;
+      padding: 10px;
+      border: 2px solid var(--muted-gray);
+      border-radius: var(--border-radius-sm);
+      font-weight: 600;
+      text-align: center;
+      cursor: pointer;
+      background: white;
+    }
+    .role-btn.active {
+      border-color: var(--primary-purple);
+      color: var(--primary-purple);
+      background: var(--lavender-fill);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Auth Panel -->
+  <div class="glass-card auth-container anim-scale-in">
+    <div class="auth-header">
+      <i class="fas fa-graduation-cap" style="font-size: 40px; color: var(--primary-purple); margin-bottom: 10px;"></i>
+      <h2>Welcome Back</h2>
+      <p style="font-size: 14px; color: #6B7280; margin-top: 5px;">Choose your role and enter your code</p>
+    </div>
+
+    <!-- Role Selection -->
+    <div class="role-select">
+      <div class="role-btn active" data-role="student" onclick="setRole('student')">Student</div>
+      <div class="role-btn" data-role="parent" onclick="setRole('parent')">Parent</div>
+      <div class="role-btn" data-role="teacher" onclick="setRole('teacher')">Teacher</div>
+    </div>
+
+    <!-- Student PIN Entry -->
+    <div id="pin-section">
+      <p style="font-family: var(--font-display); font-weight: 600; text-align: center; margin-bottom: 10px;">Enter 4-Digit Security PIN:</p>
+      <div class="pin-container">
+        <input type="text" class="pin-digit" maxlength="1" onkeyup="moveFocus(this, 'd2')" id="d1" autofocus>
+        <input type="text" class="pin-digit" maxlength="1" onkeyup="moveFocus(this, 'd3')" id="d2">
+        <input type="text" class="pin-digit" maxlength="1" onkeyup="moveFocus(this, 'd4')" id="d3">
+        <input type="text" class="pin-digit" maxlength="1" onkeyup="loginCheck()" id="d4">
+      </div>
+      <p style="text-align: center; font-size: 13px; color: #9CA3AF; margin-top: 10px;">Default PIN is <strong style="color:var(--primary-purple)">1234</strong> for testing.</p>
+    </div>
+
+    <!-- Standard Login Form for Teachers/Parents -->
+    <form id="form-section" style="display: none;" onsubmit="handleFormLogin(event)">
+      <div class="input-group">
+        <label for="login-email">Mobile / Email Address</label>
+        <input type="text" id="login-email" class="input-field" placeholder="Enter phone number or email" value="teacher@school.edu">
+      </div>
+      <div class="input-group">
+        <label for="login-pwd">Password / PIN</label>
+        <input type="password" id="login-pwd" class="input-field" placeholder="••••••••" value="password">
+      </div>
+      <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">Sign In</button>
+    </form>
+
+    <div style="text-align: center; margin-top: 24px; font-size: 14px;">
+      Don't have an account? <a href="signup.html" style="color: var(--primary-purple); font-weight: 700;">Create one</a>
+    </div>
+  </div>
+
+  <script src="../js/state.js"></script>
+  <script src="../js/ui.js"></script>
+  <script>
+    let currentRole = "student";
+
+    function setRole(role) {
+      currentRole = role;
+      STEMQuestUI.playAudio('click');
+      
+      document.querySelectorAll(".role-btn").forEach(btn => {
+        btn.classList.remove("active");
+        if (btn.getAttribute("data-role") === role) btn.classList.add("active");
+      });
+
+      const pinSec = document.getElementById("pin-section");
+      const formSec = document.getElementById("form-section");
+
+      if (role === "student") {
+        pinSec.style.display = "block";
+        formSec.style.display = "none";
+        document.getElementById("d1").focus();
+      } else {
+        pinSec.style.display = "none";
+        formSec.style.display = "block";
+        if (role === "parent") {
+          document.getElementById("login-email").value = "parent@village.org";
+        } else {
+          document.getElementById("login-email").value = "teacher@school.edu";
+        }
+      }
+    }
+
+    function moveFocus(current, nextId) {
+      if (current.value.length >= 1) {
+        document.getElementById(nextId).focus();
+      }
+    }
+
+    function loginCheck() {
+      const pin = 
+        document.getElementById("d1").value +
+        document.getElementById("d2").value +
+        document.getElementById("d3").value +
+        document.getElementById("d4").value;
+
+      if (pin.length === 4) {
+        if (pin === "1234") {
+          STEMQuestUI.playAudio('correct');
+          
+          // Inject mock Priya Rao profile if new state
+          const state = window.STEMQuestState.get();
+          if (!state.user.name) {
+            window.STEMQuestState.updateUser({
+              name: "Priya Rao",
+              phone: "9876543210",
+              classSelected: "9",
+              language: "en"
+            });
+            window.STEMQuestState.addXP(2150); // Set Priya's mock XP
+            window.STEMQuestState.state.coins = 120;
+            window.STEMQuestState.state.streak = 5;
+            window.STEMQuestState.state.badgeCollection = ["first-quest"];
+            window.STEMQuestState.save();
+          }
+
+          setTimeout(() => {
+            window.location.href = "dashboard.html";
+          }, 400);
+        } else {
+          STEMQuestUI.playAudio('incorrect');
+          document.querySelectorAll(".pin-digit").forEach(i => {
+            i.value = "";
+            i.style.borderColor = "var(--danger-red)";
+          });
+          document.getElementById("d1").focus();
+          setTimeout(() => {
+            document.querySelectorAll(".pin-digit").forEach(i => i.style.borderColor = "var(--muted-gray)");
+          }, 1000);
+        }
+      }
+    }
+
+    function handleFormLogin(e) {
+      e.preventDefault();
+      STEMQuestUI.playAudio('correct');
+      setTimeout(() => {
+        if (currentRole === "teacher") {
+          window.location.href = "teacher-dashboard.html";
+        } else if (currentRole === "parent") {
+          window.location.href = "parent-dashboard.html";
+        }
+      }, 400);
+    }
+  </script>
+</body>
+</html>

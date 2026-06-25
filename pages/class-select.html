@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STEMQuest - Select Class</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/animations.css">
+  <link rel="stylesheet" href="../css/pages.css">
+  <style>
+    body {
+      background: radial-gradient(circle at bottom left, rgba(107,33,168,0.1) 0%, rgba(219,39,119,0.05) 50%, rgba(243,244,246,1) 100%);
+    }
+    .class-header {
+      text-align: center;
+      margin: 60px auto 30px auto;
+      max-width: 600px;
+    }
+    .class-group-label {
+      grid-column: 1 / -1;
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary-purple);
+      margin-top: 15px;
+      border-bottom: 2px solid var(--muted-gray);
+      padding-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="main-content" style="padding-top: 40px;">
+    <div class="class-header anim-slide-up">
+      <i class="fas fa-graduation-cap" style="font-size: 50px; color: var(--primary-purple); margin-bottom: 15px;"></i>
+      <h2>Which Class Are You In?</h2>
+      <p style="font-size: 16px; color: #4B5563; margin-top: 5px;">We will customize your maps and quests according to your textbooks.</p>
+    </div>
+
+    <!-- Grid of Classes -->
+    <div class="choice-grid anim-slide-up" style="max-width: 800px; margin: 0 auto 40px auto; grid-template-columns: repeat(3, 1fr);">
+      
+      <div class="class-group-label">Middle School (Visual Fun)</div>
+      <div class="choice-card" onclick="selectClass('6', this)" id="class-6">
+        <i class="fas fa-child"></i>
+        <h3>Class 6</h3>
+        <p style="font-size: 11px; opacity: 0.7;">Age 11-12</p>
+      </div>
+      <div class="choice-card" onclick="selectClass('7', this)" id="class-7">
+        <i class="fas fa-seedling"></i>
+        <h3>Class 7</h3>
+        <p style="font-size: 11px; opacity: 0.7;">Age 12-13</p>
+      </div>
+      <div class="choice-card" onclick="selectClass('8', this)" id="class-8">
+        <i class="fas fa-binoculars"></i>
+        <h3>Class 8</h3>
+        <p style="font-size: 11px; opacity: 0.7;">Age 13-14</p>
+      </div>
+
+      <div class="class-group-label">High School (Board Prep)</div>
+      <div class="choice-card selected" onclick="selectClass('9', this)" id="class-9">
+        <i class="fas fa-lightbulb"></i>
+        <h3>Class 9</h3>
+        <p style="font-size: 11px; opacity: 0.7;">Age 14-15</p>
+      </div>
+      <div class="choice-card" onclick="selectClass('10', this)" id="class-10">
+        <i class="fas fa-book-open"></i>
+        <h3>Class 10</h3>
+        <p style="font-size: 11px; opacity: 0.7;">Age 15-16</p>
+      </div>
+      <div class="choice-card" style="opacity: 0.5;" title="Unlock via map upgrade" onclick="selectClass('10-poly', this)">
+        <i class="fas fa-cogs"></i>
+        <h3>Diploma</h3>
+        <p style="font-size: 11px; opacity: 0.7;">Polytechnic</p>
+      </div>
+
+      <div class="class-group-label">Senior Secondary (Advanced STEM)</div>
+      <div class="choice-card" onclick="selectClass('11', this)" id="class-11">
+        <i class="fas fa-flask"></i>
+        <h3>Class 11</h3>
+        <p style="font-size: 11px; opacity: 0.7;">Age 16-17</p>
+      </div>
+      <div class="choice-card" onclick="selectClass('12', this)" id="class-12">
+        <i class="fas fa-rocket"></i>
+        <h3>Class 12</h3>
+        <p style="font-size: 11px; opacity: 0.7;">Age 17-18</p>
+      </div>
+      <div class="choice-card" onclick="selectClass('competitive', this)" id="class-comp">
+        <i class="fas fa-atom"></i>
+        <h3>JEE / NEET</h3>
+        <p style="font-size: 11px; opacity: 0.7;">Foundation</p>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div style="text-align: center;" class="anim-slide-up">
+      <button class="btn btn-primary btn-lg" onclick="saveClass()" style="min-width: 200px;">
+        Next Step <i class="fas fa-arrow-right"></i>
+      </button>
+    </div>
+  </div>
+
+  <script src="../js/state.js"></script>
+  <script src="../js/ui.js"></script>
+  <script>
+    let selectedClass = '9';
+
+    function selectClass(cls, element) {
+      selectedClass = cls;
+      STEMQuestUI.playAudio('click');
+      
+      // Update highlights
+      document.querySelectorAll(".choice-card").forEach(card => card.classList.remove("selected"));
+      element.classList.add("selected");
+    }
+
+    function saveClass() {
+      STEMQuestUI.playAudio('correct');
+      // Save class to state
+      window.STEMQuestState.updateUser({ classSelected: selectedClass });
+      setTimeout(() => {
+        window.location.href = "avatar-builder.html";
+      }, 400);
+    }
+  </script>
+</body>
+</html>

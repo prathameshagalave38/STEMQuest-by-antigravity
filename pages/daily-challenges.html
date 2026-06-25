@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STEMQuest - Daily Challenges</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/animations.css">
+  <link rel="stylesheet" href="../css/pages.css">
+</head>
+<body>
+
+  <div class="app-container">
+    <main class="main-content" style="max-width: 600px;">
+      
+      <div style="text-align:center; margin-bottom:30px;" class="anim-slide-up">
+        <h2>⚡ Daily Challenges</h2>
+        <p style="font-size: 14px; color:#4B5563;">Solve today's puzzle to maintain your daily streak flame.</p>
+      </div>
+
+      <!-- Main Challenge Display Box -->
+      <div class="glass-card anim-scale-in" id="challenge-box" style="padding: 30px;">
+        <!-- Filled by JS -->
+      </div>
+      
+    </main>
+  </div>
+
+  <script src="../js/state.js"></script>
+  <script src="../js/db.js"></script>
+  <script src="../js/ui.js"></script>
+  <script>
+    let activeChallenge = null;
+    let answered = false;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      STEMQuestUI.initCommonUI('map');
+      loadTodayChallenge();
+    });
+
+    function loadTodayChallenge() {
+      const state = window.STEMQuestState.get();
+      const today = new Date().toDateString();
+      const box = document.getElementById("challenge-box");
+
+      // Check if already completed today
+      if (state.dailyChallengeDate === today && state.dailyChallengeCompleted) {
+        box.innerHTML = `
+          <div style="text-align:center; padding: 20px;">
+            <i class="fas fa-check-circle" style="font-size: 60px; color: var(--success-green); margin-bottom: 20px;"></i>
+            <h3>Today's Challenge Completed!</h3>
+            <p style="font-size:14px; color:#6B7280; margin-top:10px; margin-bottom:24px;">Your streak is safe for today. Flame is burning bright!</p>
+            <div class="stat-chip" style="margin: 0 auto; display:inline-flex;">
+              Streak Length: ${state.streak} Days
+            </div>
+            <br><br>
+            <button class="btn btn-primary" onclick="window.location.href='dashboard.html'">Back to Dashboard</button>
+          </div>
+        `;
+        return;
+      }
+
+      // Pick challenge
+      activeChallenge = window.STEMQuestDB.dailyChallenges[0]; // load first mock challenge
+      answered = false;
+
+      box.innerHTML = `
+        <div class="anim-slide-up">
+          <div class="flex-row-between" style="border-bottom: 1px solid var(--muted-gray); padding-bottom:12px; margin-bottom: 20px;">
+            <span style="font-weight:700; color:var(--primary-purple); font-family:var(--font-display);">${activeChallenge.title}</span>
+            <span style="font-size:12px; font-weight:700; color:var(--quest-pink);"><i class="fas fa-bolt"></i> +75 XP Reward</span>
+          </div>
+
+          <h3 style="font-size:18px; margin-bottom: 20px; color: var(--neutral-dark);">${activeChallenge.question}</h3>
+          
+          <div class="flex-column" id="dc-options">
+            ${activeChallenge.options.map((opt, idx) => `
+              <div class="mcq-option" onclick="submitDailyAnswer(${idx}, ${activeChallenge.correctIndex})">
+                <span style="width:24px; height:24px; border-radius:50%; border:2px solid var(--muted-gray); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700;">${String.fromCharCode(65 + idx)}</span>
+                <span>${opt}</span>
+              </div>
+            `).join("")}
+          </div>
+
+          <div id="dc-feedback" style="margin-top:20px; padding:15px; border-radius:var(--border-radius-sm); font-size:14px; display:none;"></div>
+        </div>
+      `;
+    }
+
+    function submitDailyAnswer(idx, correctIdx) {
+      if (answered) return;
+      answered = true;
+
+      const options = document.getElementById("dc-options").children;
+      const feedback = document.getElementById("dc-feedback");
+
+      if (idx === correctIdx) {
+        options[idx].classList.add("correct");
+        STEMQuestUI.playAudio('correct');
+        
+        feedback.style.background = "rgba(5, 150, 105, 0.1)";
+        feedback.style.color = "var(--success-green)";
+        feedback.style.border = "1px solid var(--success-green)";
+        feedback.innerHTML = `<i class="fas fa-check-circle" style="margin-right:6px;"></i> Correct! ${activeChallenge.explanation}`;
+        
+        // Save state changes
+        window.STEMQuestState.completeDailyChallenge();
+
+        setTimeout(() => {
+          showChallengeCompleteModal();
+        }, 1500);
+      } else {
+        options[idx].classList.add("incorrect");
+        options[correctIdx].classList.add("correct");
+        STEMQuestUI.playAudio('incorrect');
+        
+        feedback.style.background = "rgba(220, 38, 38, 0.1)";
+        feedback.style.color = "var(--danger-red)";
+        feedback.style.border = "1px solid var(--danger-red)";
+        feedback.innerHTML = `<i class="fas fa-times-circle" style="margin-right:6px;"></i> Wrong answer. Let's think and try again tomorrow!`;
+        
+        setTimeout(() => {
+          window.location.href = "dashboard.html";
+        }, 3000);
+      }
+      feedback.style.display = "block";
+    }
+
+    function showChallengeCompleteModal() {
+      STEMQuestUI.playAudio('level-up');
+      
+      const overlay = document.getElementById("stemquest-modal-overlay");
+      const content = document.getElementById("stemquest-modal-content");
+      if (overlay && content) {
+        content.innerHTML = `
+          <div style="font-size: 60px; margin-bottom: 10px;">⚡</div>
+          <h2 style="font-size: 30px; color: var(--success-green); margin-bottom: 10px;">Streak Safeguarded!</h2>
+          <p style="font-size: 15px; color:#4B5563; margin-bottom: 20px;">
+            You completed today's challenge. Your streak continues!
+          </p>
+          <div style="display:flex; justify-content:center; gap:20px; margin-bottom:30px;">
+            <div class="stat-chip xp" style="padding:8px 16px;"><i class="fas fa-star"></i> +75 XP</div>
+            <div class="stat-chip coins" style="padding:8px 16px;"><i class="fas fa-coins"></i> +30 Coins</div>
+          </div>
+          <button class="btn btn-success btn-lg" onclick="returnToDashboard()">Claim & Return</button>
+        `;
+        overlay.style.display = "flex";
+        STEMQuestUI.triggerConfetti();
+      }
+    }
+
+    function returnToDashboard() {
+      STEMQuestUI.closeModal();
+      window.location.href = "dashboard.html";
+    }
+  </script>
+</body>
+</html>

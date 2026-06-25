@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STEMQuest - Welcome Onboarding</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/animations.css">
+  <link rel="stylesheet" href="../css/pages.css">
+  <style>
+    body {
+      background: radial-gradient(circle at bottom right, rgba(107,33,168,0.1) 0%, rgba(219,39,119,0.05) 50%, rgba(243,244,246,1) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .intro-mascot-box {
+      width: 100px;
+      height: 100px;
+      background: linear-gradient(135deg, var(--primary-purple), var(--quest-pink));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 48px;
+      margin: 0 auto 20px auto;
+      box-shadow: 0 8px 24px rgba(107,33,168,0.25);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="glass-card onboarding-wizard anim-scale-in" style="padding: 40px; text-align: center;">
+    <!-- Progress segments -->
+    <div class="wizard-steps" style="max-width: 300px; margin: 0 auto 30px auto;">
+      <div class="wizard-step active" id="step-1">1</div>
+      <div class="wizard-step" id="step-2">2</div>
+      <div class="wizard-step" id="step-3">3</div>
+    </div>
+
+    <!-- Panel 1: Welcome -->
+    <div class="onboarding-panel active" id="panel-1">
+      <div class="intro-mascot-box anim-float">
+        <i class="fas fa-robot"></i>
+      </div>
+      <h2 style="font-size: 28px; color: var(--primary-purple); margin-bottom: 15px;">Namaste! I am Vigyan</h2>
+      <p style="font-size: 16px; color: var(--neutral-dark); line-height: 1.6; max-width: 450px; margin: 0 auto 30px auto;">
+        I am your AI learning assistant. Together, we are going to explore the beautiful **STEM Kingdom** and become real-world innovators!
+      </p>
+      <button class="btn btn-primary" onclick="nextPanel(2)" style="min-width: 160px;">
+        Hello Vigyan! <i class="fas fa-arrow-right"></i>
+      </button>
+    </div>
+
+    <!-- Panel 2: The Mission -->
+    <div class="onboarding-panel" id="panel-2">
+      <div class="intro-mascot-box">
+        <i class="fas fa-compass"></i>
+      </div>
+      <h2 style="font-size: 28px; color: var(--primary-purple); margin-bottom: 15px;">Your Heroic Mission</h2>
+      <p style="font-size: 16px; color: var(--neutral-dark); line-height: 1.6; max-width: 450px; margin: 0 auto 30px auto;">
+        Our villages are facing challenges. The water filter is broken, crop cycles are failing, and the power grid is down. You will use **Physics, Chemistry, Math, and Coding** to restore balance!
+      </p>
+      <button class="btn btn-primary" onclick="nextPanel(3)" style="min-width: 160px;">
+        Accept Mission <i class="fas fa-arrow-right"></i>
+      </button>
+    </div>
+
+    <!-- Panel 3: Rewards -->
+    <div class="onboarding-panel" id="panel-3">
+      <div class="intro-mascot-box">
+        <i class="fas fa-trophy"></i>
+      </div>
+      <h2 style="font-size: 28px; color: var(--primary-purple); margin-bottom: 15px;">Earn XP and Badges</h2>
+      <p style="font-size: 16px; color: var(--neutral-dark); line-height: 1.6; max-width: 450px; margin: 0 auto 30px auto;">
+        Every puzzle solved earns you **XP points** to rank up, and **STEM Coins** to customize your profile. Let's unlock your first Quest Map chapter!
+      </p>
+      <button class="btn btn-success btn-lg" onclick="finishOnboarding()" style="min-width: 200px;">
+        Enter Kingdom <i class="fas fa-door-open"></i>
+      </button>
+    </div>
+  </div>
+
+  <script src="../js/state.js"></script>
+  <script src="../js/ui.js"></script>
+  <script>
+    function nextPanel(stepNum) {
+      STEMQuestUI.playAudio('click');
+      
+      // Update wizard circles
+      document.querySelectorAll(".wizard-step").forEach((circle, idx) => {
+        circle.classList.remove("active");
+        if (idx + 1 < stepNum) circle.classList.add("completed");
+        if (idx + 1 === stepNum) circle.classList.add("active");
+      });
+
+      // Show panel
+      document.querySelectorAll(".onboarding-panel").forEach(panel => panel.classList.remove("active"));
+      document.getElementById("panel-" + stepNum).classList.add("active");
+
+      // Voice greeting overlay for immersive AI mentor feel
+      if ('speechSynthesis' in window) {
+        let text = "";
+        if (stepNum === 2) text = "Our villages are facing challenges. Let's solve them using science and math.";
+        if (stepNum === 3) text = "Earn coins and badges to rank up your profile! Let's get started.";
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.95;
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    function finishOnboarding() {
+      STEMQuestUI.playAudio('correct');
+      
+      // Seed default name if blank
+      const state = window.STEMQuestState.get();
+      if (!state.user.name) {
+        window.STEMQuestState.updateUser({
+          name: "Young Innovator",
+          classSelected: "9",
+          language: "en"
+        });
+      }
+      
+      setTimeout(() => {
+        window.location.href = "dashboard.html";
+      }, 400);
+    }
+  </script>
+</body>
+</html>

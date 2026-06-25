@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STEMQuest - Gamified STEM Learning Platform</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <style>
+    /* Landing page specific layout override */
+    .landing-hero {
+      padding: 120px 20px 80px 20px;
+      text-align: center;
+      background: radial-gradient(circle at top, rgba(107, 33, 168, 0.15) 0%, rgba(243, 244, 246, 0) 70%);
+      min-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .landing-logo {
+      font-size: 56px;
+      font-family: var(--font-display);
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--primary-purple), var(--quest-pink));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 20px;
+    }
+    .tagline {
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--neutral-dark);
+      margin-bottom: 30px;
+      max-width: 600px;
+    }
+    .feature-grid {
+      margin-top: 60px;
+      width: 100%;
+      max-width: 1200px;
+    }
+    .landing-card {
+      text-align: center;
+      padding: 30px;
+    }
+    .landing-card i {
+      font-size: 40px;
+      color: var(--primary-purple);
+      margin-bottom: 20px;
+    }
+    .landing-footer {
+      background: var(--neutral-dark);
+      color: white;
+      text-align: center;
+      padding: 40px 20px;
+      margin-top: 100px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top bar -->
+  <header class="app-topbar" style="left:0px;">
+    <div class="topbar-logo">
+      <a href="index.html">
+        <i class="fas fa-graduation-cap"></i>
+        <span>STEMQuest</span>
+      </a>
+    </div>
+    <div>
+      <a href="pages/login.html" class="btn btn-secondary btn-sm" onclick="STEMQuestUI.playAudio('click')">Login</a>
+      <a href="pages/signup.html" class="btn btn-primary btn-sm" onclick="STEMQuestUI.playAudio('click')">Sign Up</a>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="landing-hero main-content" style="padding-top:140px; padding-bottom: 60px;">
+    <div class="anim-float">
+      <i class="fas fa-graduation-cap" style="font-size: 80px; color: var(--primary-purple); margin-bottom: 20px; text-shadow: 0 0 20px rgba(107,33,168,0.2);"></i>
+    </div>
+    <h1 class="landing-logo">STEMQuest</h1>
+    <p class="tagline">Learn. Play. Build. Innovate. <br><span style="color:var(--quest-pink); font-size:18px; font-weight:700;">From Village Dreams to Future Scientists.</span></p>
+    <p style="font-size: 16px; max-width: 600px; margin: -10px auto 40px auto; color: #4B5563;">
+      Save villages by solving exciting STEM challenges. Mix chemicals, build circuit boards, solve puzzles, and duel your peers in a magical edtech adventure designed for Class 6-12 students.
+    </p>
+    <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+      <a href="pages/signup.html" class="btn btn-accent btn-lg" onclick="STEMQuestUI.playAudio('click')">
+        <i class="fas fa-rocket"></i> Start My Journey
+      </a>
+      <a href="pages/login.html" class="btn btn-outline btn-lg" onclick="STEMQuestUI.playAudio('click')">
+        Teacher/Parent Portal
+      </a>
+    </div>
+
+    <!-- Feature Grid -->
+    <div class="feature-grid grid-4 anim-slide-up">
+      <div class="glass-card landing-card">
+        <i class="fas fa-compass"></i>
+        <h3>Quest Map</h3>
+        <p style="font-size: 14px; color: #4B5563; margin-top: 10px;">Solve math & science quests in Physics Peaks, Chemistry Caves, and Tech Valleys.</p>
+      </div>
+      <div class="glass-card landing-card">
+        <i class="fas fa-flask"></i>
+        <h3>Virtual Labs</h3>
+        <p style="font-size: 14px; color: #4B5563; margin-top: 10px;">Test forces, build circuit boards, and mix indicators safely inside your browser.</p>
+      </div>
+      <div class="glass-card landing-card">
+        <i class="fas fa-trophy"></i>
+        <h3>Battle Arena</h3>
+        <p style="font-size: 14px; color: #4B5563; margin-top: 10px;">Duel peers in anonymous speed trivia. Climb Class, School, and District leaderboards.</p>
+      </div>
+      <div class="glass-card landing-card">
+        <i class="fas fa-robot"></i>
+        <h3>Vigyan AI Tutor</h3>
+        <p style="font-size: 14px; color: #4B5563; margin-top: 10px;">Get personalized hints and interactive explanations in your mother tongue.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="landing-footer">
+    <h3 style="color: white; font-size: 24px; margin-bottom: 10px;">STEMQuest</h3>
+    <p style="font-size: 14px; opacity: 0.7; max-width: 400px; margin: 0 auto 20px auto;">Making Science, Technology, Engineering, and Math exciting and accessible for rural India.</p>
+    <div style="font-size: 12px; opacity: 0.5;">
+      &copy; 2026 STEMQuest. Frontend implementation.
+    </div>
+  </footer>
+
+  <script src="js/state.js"></script>
+  <script src="js/ui.js"></script>
+  <script>
+    // Just trigger standard click check
+    document.addEventListener("DOMContentLoaded", () => {
+      if (window.STEMQuestUI) {
+        window.STEMQuestUI.playAudio('click');
+      }
+    });
+  </script>
+</body>
+</html>

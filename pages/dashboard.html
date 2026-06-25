@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STEMQuest - Home Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/animations.css">
+  <link rel="stylesheet" href="../css/pages.css">
+  <style>
+    .welcome-banner {
+      background: linear-gradient(135deg, var(--primary-purple), var(--primary-purple-hover));
+      color: white;
+      border-radius: var(--border-radius-lg);
+      padding: 30px;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 25px rgba(107, 33, 168, 0.2);
+    }
+    .welcome-banner::after {
+      content: '\f19c';
+      font-family: 'Font Awesome 6 Free';
+      font-weight: 900;
+      position: absolute;
+      right: 20px;
+      bottom: -20px;
+      font-size: 140px;
+      opacity: 0.1;
+      transform: rotate(-15deg);
+    }
+    .progress-bar-container {
+      width: 100%;
+      height: 12px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 15px 0 5px 0;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--quest-pink);
+      width: 0%;
+      transition: width 0.8s ease-in-out;
+    }
+    .dashboard-badge-grid {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding: 10px 0;
+    }
+    .dashboard-badge-item {
+      flex: 0 0 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: var(--neutral-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: #9CA3AF;
+      border: 2px solid var(--muted-gray);
+    }
+    .dashboard-badge-item.unlocked {
+      background: rgba(219,39,119,0.1);
+      color: var(--quest-pink);
+      border-color: var(--quest-pink);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <main class="main-content">
+      <!-- Welcome Banner -->
+      <div class="welcome-banner anim-slide-up" id="welcome-card">
+        <h2 style="color: white; font-size: 30px;" id="welcome-user-text">Namaste, Learner!</h2>
+        <p style="font-size: 15px; opacity: 0.9;" id="rank-title-text">Rank: Curious Cub</p>
+        
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" id="level-progress-fill"></div>
+        </div>
+        <div class="flex-row-between" style="font-size: 12px; font-weight: 600;">
+          <span id="level-current">Level 1</span>
+          <span id="xp-current">0 / 500 XP</span>
+          <span id="level-next">Level 2</span>
+        </div>
+      </div>
+
+      <!-- Quick Portals Layout -->
+      <div class="grid-3 anim-slide-up">
+        <!-- Active Quest card -->
+        <div class="quest-card" style="grid-column: span 2;">
+          <div class="quest-card-badge" style="background: var(--lavender-fill); color: var(--primary-purple);">Active Quest</div>
+          <h3 style="font-size: 22px; color: var(--neutral-dark);">Resume Last Mission</h3>
+          <p style="font-size: 14px; color: #4B5563; max-width: 450px;" id="active-quest-desc">You are learning the basics of electrical loops inside the village generator grid.</p>
+          
+          <div class="flex-row-between" style="margin-top: 15px;">
+            <div style="display:flex; gap:16px;">
+              <span style="font-size:13px; font-weight:700;"><i class="fas fa-star" style="color:var(--quest-pink)"></i> 50 XP Reward</span>
+              <span style="font-size:13px; font-weight:700;"><i class="fas fa-coins" style="color:var(--warning-amber)"></i> 10 Coins</span>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="resumeQuest()">Resume <i class="fas fa-play"></i></button>
+          </div>
+        </div>
+
+        <!-- Daily Challenge widget -->
+        <div class="quest-card" style="background: radial-gradient(circle at bottom right, rgba(219,39,119,0.05) 0%, white 100%);">
+          <div class="quest-card-badge" style="background: rgba(217,119,6,0.1); color: var(--warning-amber);" id="challenge-status-badge">Pending</div>
+          <h3 style="font-size: 20px;"><i class="fas fa-calendar-day" style="color:var(--quest-pink); margin-right: 6px;"></i> Daily Challenge</h3>
+          <p style="font-size: 13px; color: #4B5563; margin-top: 5px;">Complete a 5-minute puzzle to keep your daily streak alive!</p>
+          <a href="daily-challenges.html" class="btn btn-accent btn-sm" style="margin-top: 15px; width: fit-content;" onclick="STEMQuestUI.playAudio('click')">Play Puzzle</a>
+        </div>
+      </div>
+
+      <!-- More Options Grid -->
+      <div class="grid-2 anim-slide-up" style="margin-top: 24px;">
+        <!-- Virtual Labs Preview -->
+        <div class="glass-card">
+          <h3 style="font-size: 20px; color: var(--neutral-dark); margin-bottom: 12px;"><i class="fas fa-flask" style="color:var(--primary-purple); margin-right: 8px;"></i> Virtual STEM Lab</h3>
+          <p style="font-size: 14px; color: #4B5563; margin-bottom: 16px;">Drag-and-drop components, mix indicators, and perform experiment tasks in Physics, Chemistry, and Math safely.</p>
+          <a href="virtual-lab.html" class="btn btn-outline btn-sm" onclick="STEMQuestUI.playAudio('click')">Launch Workbench</a>
+        </div>
+
+        <!-- Battle Arena Match launcher -->
+        <div class="glass-card">
+          <h3 style="font-size: 20px; color: var(--neutral-dark); margin-bottom: 12px;"><i class="fas fa-trophy" style="color:var(--quest-pink); margin-right: 8px;"></i> Battle Arena</h3>
+          <p style="font-size: 14px; color: #4B5563; margin-bottom: 16px;">Duel online classmates in anonymous speed question tournaments. Win trophy titles and earn large XP boosters.</p>
+          <a href="battle-arena.html" class="btn btn-outline btn-sm" onclick="STEMQuestUI.playAudio('click')">Find Opponent</a>
+        </div>
+      </div>
+
+      <!-- Badges cabinet preview -->
+      <div class="glass-card anim-slide-up" style="margin-top: 24px;">
+        <div class="flex-row-between" style="margin-bottom: 15px;">
+          <h3 style="font-size: 20px; color: var(--neutral-dark);"><i class="fas fa-award" style="color:var(--warning-amber); margin-right: 8px;"></i> Badges Cabinet</h3>
+          <a href="badge-collection.html" style="color: var(--primary-purple); font-weight: 700; font-size: 14px;" onclick="STEMQuestUI.playAudio('click')">View All</a>
+        </div>
+        <div class="dashboard-badge-grid" id="dashboard-badges-container">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/state.js"></script>
+  <script src="../js/db.js"></script>
+  <script src="../js/ui.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Load UI Shell
+      STEMQuestUI.initCommonUI('map');
+      
+      // Load and apply state parameters
+      updateDashboardData();
+
+      // Listen to profile updates
+      window.addEventListener("stemquest_state_changed", () => {
+        updateDashboardData();
+      });
+    });
+
+    function updateDashboardData() {
+      const state = window.STEMQuestState.get();
+      if (!state.user.name) {
+        // Safe redirect if not signed up
+        window.location.href = "login.html";
+        return;
+      }
+
+      // 1. Text overrides
+      document.getElementById("welcome-user-text").innerText = `Namaste, ${state.user.name}!`;
+      document.getElementById("rank-title-text").innerText = `Rank: ${state.rank}`;
+      
+      // 2. Level calculation
+      const lvl = state.level;
+      const currentLevelXP = Math.pow(lvl - 1, 2) * 100;
+      const nextLevelXP = Math.pow(lvl, 2) * 100;
+      const progressXP = state.xp - currentLevelXP;
+      const requiredXP = nextLevelXP - currentLevelXP;
+      const percent = Math.min(100, Math.max(0, (progressXP / requiredXP) * 100));
+
+      document.getElementById("level-progress-fill").style.width = percent + "%";
+      document.getElementById("level-current").innerText = `Level ${lvl}`;
+      document.getElementById("level-next").innerText = `Level ${lvl + 1}`;
+      document.getElementById("xp-current").innerText = `${state.xp} / ${nextLevelXP} XP`;
+
+      // 3. Daily challenge status badge
+      const today = new Date().toDateString();
+      const chalBadge = document.getElementById("challenge-status-badge");
+      if (state.dailyChallengeDate === today && state.dailyChallengeCompleted) {
+        chalBadge.innerText = "Completed";
+        chalBadge.style.background = "rgba(5, 150, 105, 0.1)";
+        chalBadge.style.color = "var(--success-green)";
+      } else {
+        chalBadge.innerText = "Pending";
+        chalBadge.style.background = "rgba(217,119,6,0.1)";
+        chalBadge.style.color = "var(--warning-amber)";
+      }
+
+      // 4. Fill badge cabinet preview
+      const badgesContainer = document.getElementById("dashboard-badges-container");
+      if (badgesContainer && window.STEMQuestDB) {
+        badgesContainer.innerHTML = window.STEMQuestDB.badges.map(badge => {
+          const isUnlocked = state.badgeCollection.includes(badge.id);
+          return `
+            <div class="dashboard-badge-item ${isUnlocked ? 'unlocked' : ''}" title="${badge.name}: ${badge.desc}">
+              <i class="fas ${badge.icon}"></i>
+            </div>
+          `;
+        }).join("");
+      }
+    }
+
+    function resumeQuest() {
+      STEMQuestUI.playAudio('click');
+      window.location.href = "quest.html?id=phys_q1";
+    }
+  </script>
+</body>
+</html>

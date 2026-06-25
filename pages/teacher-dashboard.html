@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STEMQuest - Teacher Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/animations.css">
+  <link rel="stylesheet" href="../css/pages.css">
+  <style>
+    .teacher-header {
+      background: linear-gradient(135deg, var(--primary-purple), #4c1d95);
+      color: white;
+      padding: 30px;
+      border-radius: var(--border-radius-lg);
+      margin-bottom: 24px;
+    }
+    .alert-card {
+      border: 1px solid rgba(220,38,38,0.2);
+      border-left: 5px solid var(--danger-red);
+      background: rgba(220,38,38,0.02);
+      padding: 14px;
+      border-radius: var(--border-radius-sm);
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <main class="main-content" style="max-width: 1000px;">
+      
+      <!-- Teacher Header -->
+      <div class="teacher-header anim-slide-up">
+        <h1 style="color:white; font-size:32px;">Teacher Console</h1>
+        <p style="font-size:14px; opacity:0.8;">Class 9-A (Science Group) • Sikar Public High School</p>
+      </div>
+
+      <!-- Critical alerts for struggling students -->
+      <div class="glass-card anim-slide-up" style="margin-bottom:24px; padding:24px;">
+        <h3 style="color:var(--danger-red); margin-bottom:15px;"><i class="fas fa-exclamation-triangle"></i> Student Support Alerts</h3>
+        <div id="alerts-container">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Main classroom roster heatmap -->
+      <div class="glass-card anim-slide-up" style="margin-bottom:24px; padding:24px; overflow-x:auto;">
+        <h3 style="color:var(--neutral-dark); margin-bottom:10px;"><i class="fas fa-table" style="color:var(--primary-purple);"></i> Performance Heatmap Matrix</h3>
+        <table class="heatmap-table">
+          <thead>
+            <tr>
+              <th>Student Name</th>
+              <th>XP Score</th>
+              <th>Streak (Days)</th>
+              <th>Quests Done (%)</th>
+              <th>Physics (Electricity)</th>
+              <th>Math (Fractions)</th>
+            </tr>
+          </thead>
+          <tbody id="student-roster-rows">
+            <!-- Populated by JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Assignment Builder -->
+      <div class="glass-card anim-slide-up" style="padding:24px;">
+        <div class="flex-row-between" style="margin-bottom:20px;">
+          <h3 style="color:var(--neutral-dark);"><i class="fas fa-book-open" style="color:var(--quest-pink);"></i> Classroom Homework Assignments</h3>
+          <button class="btn btn-primary btn-sm" onclick="addNewAssignment()"><i class="fas fa-plus"></i> Assign New Quest</button>
+        </div>
+        
+        <div class="grid-2" style="gap:16px;" id="assignments-grid">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="../js/state.js"></script>
+  <script src="../js/db.js"></script>
+  <script src="../js/ui.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Hide common nav bar for dedicated teacher dashboard
+      STEMQuestUI.initCommonUI(null);
+      document.querySelector(".app-nav").style.display = "none";
+
+      renderTeacherPortal();
+    });
+
+    function renderTeacherPortal() {
+      const data = window.STEMQuestDB.teacherData;
+      
+      // 1. Render Alerts
+      const alertsBox = document.getElementById("alerts-container");
+      alertsBox.innerHTML = data.alerts.map(a => `
+        <div class="alert-card" style="border-left-color:${a.severity === 'high' ? 'var(--danger-red)' : 'var(--warning-amber)'}">
+          <div>
+            <strong>${a.studentName}</strong>: <span style="font-size:13px; color:#4B5563;">${a.msg}</span>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="sendWhatsAppReminder('${a.studentName}')">Send Helper Hint</button>
+        </div>
+      `).join("");
+
+      // 2. Render Heatmap table rows
+      const table = document.getElementById("student-roster-rows");
+      table.innerHTML = data.students.map(s => {
+        let pColor = 'high';
+        let mColor = 'high';
+        
+        if (s.status === 'needs_help') pColor = 'medium';
+        if (s.status === 'struggling') {
+          pColor = 'low';
+          mColor = 'low';
+        }
+
+        return `
+          <tr>
+            <td><strong>${s.name}</strong></td>
+            <td>${s.xp} XP (Lvl ${s.level})</td>
+            <td>${s.streak} Days</td>
+            <td>${s.completion}%</td>
+            <td class="heatmap-cell ${pColor}">${pColor === 'high' ? 'Excellent' : (pColor === 'medium' ? 'Needs Help' : 'Struggling')}</td>
+            <td class="heatmap-cell ${mColor}">${mColor === 'high' ? 'Excellent' : 'Struggling'}</td>
+          </tr>
+        `;
+      }).join("");
+
+      // 3. Render Homework Assignments list
+      renderAssignments();
+    }
+
+    function renderAssignments() {
+      const grid = document.getElementById("assignments-grid");
+      const list = window.STEMQuestDB.teacherData.assignments;
+
+      grid.innerHTML = list.map(ass => {
+        const percent = Math.floor((ass.completedCount / ass.total) * 100);
+        return `
+          <div class="quest-card">
+            <div class="quest-card-badge" style="background:var(--lavender-fill); color:var(--primary-purple);">${ass.subject}</div>
+            <h4 style="font-size: 18px; color: var(--neutral-dark);">${ass.title}</h4>
+            <p style="font-size: 12px; color:#6B7280;">Due: ${ass.dueDate}</p>
+            
+            <div style="margin-top:10px;">
+              <div class="flex-row-between" style="font-size: 12px; font-weight:700; margin-bottom:4px;">
+                <span>Completion: ${ass.completedCount}/${ass.total} Students</span>
+                <span>${percent}%</span>
+              </div>
+              <div class="battle-health-bar" style="height:6px;"><div class="battle-health-fill" style="width:${percent}%; background:var(--primary-purple);"></div></div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function sendWhatsAppReminder(studentName) {
+      STEMQuestUI.playAudio('click');
+      alert(`WhatsApp lesson hint sent to student: ${studentName}.`);
+    }
+
+    function addNewAssignment() {
+      STEMQuestUI.playAudio('click');
+      const title = prompt("Enter Quest Title (e.g. pH Neutralizer sheet):");
+      if (!title) return;
+
+      const sub = prompt("Enter Subject (Physics / Chemistry / Mathematics):", "Physics");
+      if (!sub) return;
+
+      const list = window.STEMQuestDB.teacherData.assignments;
+      list.push({
+        title: title,
+        subject: sub,
+        dueDate: "July 5, 2026",
+        completedCount: 0,
+        total: 32
+      });
+
+      STEMQuestUI.playAudio('correct');
+      renderAssignments();
+    }
+  </script>
+</body>
+</html>
